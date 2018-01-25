@@ -1,5 +1,5 @@
-from tcontrol.lti import LinearTimeInvariant
-from tcontrol.transferfunction import TransferFunction
+from tcontrol.transferfunction import ss2tf
+from tcontrol.statespace import StateSpace
 from tcontrol.pzmap import pzmap
 from tcontrol.plot_utility import AnnotatedPoint, AttachedCursor
 import numpy as np
@@ -28,11 +28,15 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
     :return: roots of the den and kvect
     :rtype: (np.ndarray, np.ndarray)
     """
-    if not isinstance(sys_, TransferFunction) and isinstance(sys_, LinearTimeInvariant):
+    if not sys_.issiso():
         raise NotImplementedError('rlocus is only for TransferFunction now.')
+    if isinstance(sys_, StateSpace):
+        system = ss2tf(sys_)
+    else:
+        system = sys_
 
-    nump = np.poly1d(sys_.num)
-    denp = np.poly1d(sys_.den)
+    nump = np.poly1d(system.num)
+    denp = np.poly1d(system.den)
     if kvect is None:
         d = _cal_multi_roots(nump, denp)
         k = -denp(d)/nump(d)
@@ -48,7 +52,7 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
         kvect = np.append(kvect, np.linspace(k[-1], k[-1]*50, 500))
 
     ol_gains = kvect
-    roots = _cal_roots(sys_, ol_gains)
+    roots = _cal_roots(system, ol_gains)
 
     if plot:
         fig, ax = plt.subplots()
@@ -65,13 +69,13 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
             l, *_ = ax.plot(r.real, r.imag, picker=2)
             line.append(l)
 
-        p, z = pzmap(sys_, plot=False)
+        p, z = pzmap(system, plot=False)
         ax.scatter(np.real(z), np.imag(z), s=50, marker='o', color='#069af3')
         ax.scatter(np.real(p), np.imag(p), s=50, marker='x', color='#fdaa48')
         ax.grid()
         plt.title('Root Locus')
 
-        cursor = RlocusAttachedCursor(ax, fig, line, sys_=sys_, linestyle='--')
+        cursor = RlocusAttachedCursor(ax, fig, line, sys_=system, linestyle='--')
         cursor.connect_event("pick_event", cursor)
 
         plt.show()

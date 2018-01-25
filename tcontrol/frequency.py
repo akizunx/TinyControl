@@ -1,6 +1,7 @@
+import math
+
 from tcontrol.transferfunction import TransferFunction, LinearTimeInvariant
 import numpy as np
-import math
 from matplotlib import pyplot as plt
 
 __all__ = ["nyquist", "bode"]

@@ -1,7 +1,8 @@
+import numbers
+
 from tcontrol.lti import LinearTimeInvariant
 import numpy as np
 import sympy as sym
-import numbers
 
 # TODO: trans function of MIMO
 # TODO: improve error msg of class TransferFunction
