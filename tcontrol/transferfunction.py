@@ -252,7 +252,7 @@ def zpk(z, p, k):
     return TransferFunction(num, den)
 
 
-def ss2tf(system):
+def ss2tf(sys_):
     """
 
     :param system:
@@ -260,9 +260,9 @@ def ss2tf(system):
     :return:
     :rtype:
     """
-    T = system.to_controllable_form()
-    A_ = T.I*system.A*T
-    C_ = system.C*T
+    T = sys_.to_controllable_form()
+    A_ = T.I*sys_.A*T
+    C_ = sys_.C*T
     a = np.asarray(A_[-1]).reshape(-1)*(-1)
     a = np.append(a, 1)
     a = a[::-1]
