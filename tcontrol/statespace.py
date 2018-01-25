@@ -28,14 +28,13 @@ class StateSpace(LinearTimeInvariant):
                 "{0} != {1}, wrong shape of A".format(A.shape[0], A.shape[1]))
         if B.shape[0] != A.shape[0]:
             raise ValueError(
-                "{0} != {1}, wrong shape of B".format(B.shape[0], A.shape[0]))
+                "{0} != ({1}, {2}), wrong shape of B".format(B.shape, A.shape[0], B.shape[1]))
         if C.shape[1] != A.shape[0]:
             raise ValueError(
-                "{0} != {1}, wrong shape of C".format(C.shape[1], A.shape[0]))
-        if D.shape[0] != C.shape[0] or D.shape[1] != B.shape[1]:
+                "{0} != ({1}, {2}), wrong shape of C".format(C.shape, A.shape[0], C.shape[0]))
+        if D.shape != (C.shape[0], B.shape[1]):
             raise ValueError(
-                "{0} != ({1}, {2}), wrong shape of D".format(D.shape, C.shape[0],
-                                                             B.shape[1]))
+                "{0} != ({1}, {2}), wrong shape of D".format(D.shape, C.shape[0], B.shape[1]))
 
         super().__init__(B.shape[1], C.shape[0], dt)
         self.A = A
@@ -51,6 +50,18 @@ class StateSpace(LinearTimeInvariant):
         return a_str + b_str + c_str + d_str
 
     __repr__ = __str__
+
+    def __eq__(self, other):
+        return np.array_equal(self.A, other.A) and \
+               np.array_equal(self.B, other.B) and \
+               np.array_equal(self.C, other.C) and \
+               np.array_equal(self.D, other.D)
+
+    def __ne__(self, other):
+        if self == other:
+            return False
+        else:
+            return True
 
     def __neg__(self):
         return StateSpace(self.A, self.B, -self.C, -self.D, dt=self.dt)
@@ -225,8 +236,11 @@ class StateSpace(LinearTimeInvariant):
 def ss(*args, **kwargs):
     length = len(args)
     if length == 1:
-        _ss = args[0]
-        A, B, C, D = _ss.A.copy(), _ss.B.copy(), _ss.C.copy(), _ss.D.copy()
+        _sys = args[0]
+        try:
+            A, B, C, D = _sys.A.copy(), _sys.B.copy(), _sys.C.copy(), _sys.D.copy()
+        except AttributeError:
+            return tf2ss(_sys)
     elif length == 4:
         A, B, C, D = args
     else:
@@ -238,7 +252,10 @@ def ss(*args, **kwargs):
 
 def tf2ss(*args):
     if len(args) == 1:
-        num, den, dt = args[0].num, args[0].den, args[0].dt
+        try:
+            num, den, dt = args[0].num, args[0].den, args[0].dt
+        except AttributeError as e:
+            raise TypeError("TransferFunction expected got {0}".format(type(args[0]))) from e
     elif len(args) == 2:
         num, den = args
         dt = None

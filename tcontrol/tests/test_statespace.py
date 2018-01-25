@@ -15,34 +15,36 @@ class TestStateSpace(TestCase):
 
     def test___init__(self):
         ss_ = StateSpace(self.A, self.B, self.C, self.D)
-        self.assertEqual(ss_.A is self.A, True)
-        StateSpace(self.A, self.B, self.C, 0)
+        self.assertTrue(ss_.A is self.A)
+        self.assertEqual(StateSpace(self.A, self.B, self.C, 0),
+                         StateSpace(self.A, self.B, self.C, self.D))
+        self.assertRaises(ValueError, StateSpace, self.A, self.C, self.B, 0)
+        self.assertRaises(ValueError, StateSpace, self.A, self.C, 0, self.B)
 
     def test___str__(self):
-        print(self.ss_)
-
-    def test___add__(self):
-        ss_ = StateSpace(self.A, self.B, self.C, self.D)
-        ss_ = ss_ + ss_
-
-    def test___mul__(self):
-        # A_ = np.mat([[0, 1, 1, 1], [-4, -0.5, 1, 2], [0, 0, 0, -4], ])
-        # print(StateSpace.dual_system(self.ss_)*self.ss_)
-        print(self.ss_*StateSpace.dual_system(self.ss_))
-
-    def test_pole(self):
-        ss_ = StateSpace(self.A, self.B, self.C, self.D)
         pass
 
+    def test___add__(self):
+        ss_1 = self.ss_ + self.ss_
+        A = [[0, 1, 0, 0], [-4, -.5, 0, 0], [0, 0, 0, 1], [0, 0, -4, -.5]]
+        B = [[0], [1], [0], [1]]
+        C = [4, 0, 4, 0]
+        ss_2 = StateSpace(A, B, C, 0)
+        self.assertEqual(ss_1, ss_2)
+
+    def test___mul__(self):
+        pass
+
+    def test_pole(self):
+        self.assertTrue(np.array_equal(self.ss_.pole(), ss2tf(self.ss_).pole()))
+
     def test_controllability(self):
-        # print(self.ss_.controllability())
         pass
 
     def test_is_controllable(self):
         self.assertTrue(self.ss_.is_controllable())
 
     def test_observability(self):
-        # print(self.ss_.observability())
         pass
 
     def test_is_observable(self):
@@ -56,18 +58,24 @@ class TestStateSpace(TestCase):
 
     def test_to_controllable_form(self):
         T = self.ss_.to_controllable_form()
-        print(T.I*self.A*T)
-        print(T.I*self.B)
-        print(self.C*T)
+        A = T.I*self.A*T
+        B = T.I*self.B
+        C = self.C*T
+        ss_1 = StateSpace(A, B, C, 0)
+        ss_2 = StateSpace([[0, 1], [-4, -.5]], [[0], [1]], [4, 0], 0)
+        self.assertEqual(ss_1, ss_2)
 
     def test_ss(self):
-        pass
+        self.assertEqual(ss(self.A, self.B, self.C, self.D), self.ss_)
+        self.assertRaises(ValueError, ss, self.A, self.B, self.C, self.D, self.B)
+        self.assertEqual(ss(self.tf_), self.ss_)
 
     def test_tf2ss(self):
         ss_ = tf2ss(self.tf_)
         self.assertTrue(np.all(ss_.A == self.A))
         self.assertTrue(np.all(ss_.B == self.B))
         self.assertTrue(np.all(ss_.C == self.C))
+        self.assertRaises(TypeError, tf2ss, ss_)
 
     def test_ss2tf(self):
         self.assertEqual(ss2tf(self.ss_), self.tf_)
@@ -78,3 +86,4 @@ class TestStateSpace(TestCase):
         sys_ = StateSpace(A, B, self.C, self.D)
         d_sys_ = continuous_to_discrete(sys_, 0.05)
         continuous_to_discrete(d_sys_, 0.01)
+        self.assertWarns(UserWarning, continuous_to_discrete, d_sys_, 0.01)
