@@ -87,3 +87,10 @@ class TestStateSpace(TestCase):
         d_sys_ = continuous_to_discrete(sys_, 0.05)
         continuous_to_discrete(d_sys_, 0.01)
         self.assertWarns(UserWarning, continuous_to_discrete, d_sys_, 0.01)
+
+    def test_lyapunov(self):
+        A = [[0, 1], [-2, -3]]
+        B = [[0], [1]]
+        C = [1, 0]
+        ss_ = StateSpace(A, B, C, 0)
+        self.assertTrue(np.array_equal(lyapunov(ss_), [[1.25, 0.25], [0.25, 0.25]]))

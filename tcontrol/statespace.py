@@ -4,7 +4,7 @@ from tcontrol.lti import LinearTimeInvariant
 import numpy as np
 import sympy as sym
 
-__all__ = ["StateSpace", "ss", "tf2ss", "continuous_to_discrete"]
+__all__ = ["StateSpace", "ss", "tf2ss", "continuous_to_discrete", "lyapunov"]
 
 
 class StateSpace(LinearTimeInvariant):
@@ -214,7 +214,8 @@ class StateSpace(LinearTimeInvariant):
         return cls(sys_.A.T.copy(), sys_.C.T.copy(), sys_.B.T.copy(), sys_.D.T.copy(),
                    dt=sys_.dt)
 
-    def lyapunov(self):
+    @staticmethod
+    def lyapunov(sys_):
         """
         Use:
             solve the equation A.T * X + X * A = -I
@@ -222,15 +223,19 @@ class StateSpace(LinearTimeInvariant):
         :return: the matrix X
         :rtype: np.matrix
         """
-        n = self.A.shape[0]
+        n = sys_.A.shape[0]
         eye = sym.eye(n)
         p = [[sym.Symbol('p_{0}{1}'.format(i, j)) for i in range(n)] for j in range(n)]
         P = sym.Matrix(p)
-        eq = self.A.T*P + P*self.A + eye
+        eq = sys_.A.T*P + P*sys_.A + eye
         p_set = sym.solve(eq)
         P = P.evalf(subs=p_set)
         X = np.asarray(P.tolist(), dtype=float)
         return np.mat(X)
+
+
+def lyapunov(sys_):
+    return StateSpace.lyapunov(sys_)
 
 
 def ss(*args, **kwargs):
