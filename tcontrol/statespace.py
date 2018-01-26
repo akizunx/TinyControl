@@ -13,6 +13,7 @@ class StateSpace(LinearTimeInvariant):
     """
 
     def __init__(self, A, B, C, D, *, dt=None):
+        # let A, B, C and D convert to numpy matrix
         if not isinstance(A, np.matrix):
             A = np.mat(A)
         if not isinstance(B, np.matrix):
@@ -102,7 +103,8 @@ class StateSpace(LinearTimeInvariant):
         elif self.dt is not None and other.dt is None or self.dt == other.dt:
             dt = self.dt
         else:
-            raise ValueError("different sampling times")
+            raise ValueError("Sampling time is different. "
+                             "one is {0}, the other is {1}".format(self.dt, other.dt))
 
         A = np.zeros((self.A.shape[0] + other.A.shape[0],
                       self.A.shape[1] + other.A.shape[1]))
@@ -114,7 +116,7 @@ class StateSpace(LinearTimeInvariant):
         D = self.D*other.D
         return StateSpace(A, C.T, B.T, D, dt=dt)
 
-    def feedback(self, K=1, sign=1):
+    def feedback(self, K=1, sign=1):  # TODO: need to be reimplemented
         try:
             K = _convert_to_ss(K)
         except TypeError as e:
@@ -158,7 +160,7 @@ class StateSpace(LinearTimeInvariant):
         Use:
             the rank of the controllability matrix
 
-        :return:
+        :return: if system is controllable return True
         :rtype: bool
         """
         if np.linalg.matrix_rank(self.controllability()) == self.A.shape[0]:
@@ -169,17 +171,17 @@ class StateSpace(LinearTimeInvariant):
     def observability(self):
         """
         Use:
-            calculate and return the matrix [C
-                                             C*A
-                                             C*A^2
-                                             ...
-                                             C*A^(n-1)]
+            calculate and return the matrix [C        ]
+                                            [C*A      ]
+                                            [C*A^2    ]
+                                            [   ...   ]
+                                            [C*A^(n-1)]
 
-        :return: the matrix [C
-                             C*A
-                             C*A^2
-                             ...
-                             C*A^(n-1)]
+        :return: the matrix [C        ]
+                            [C*A      ]
+                            [C*A^2    ]
+                            [   ...   ]
+                            [C*A^(n-1)]
         :rtype: np.matrix
         """
         tmp = self.C.copy()
@@ -192,7 +194,7 @@ class StateSpace(LinearTimeInvariant):
         Use:
             the rank of the observability matrix
 
-        :return:
+        :return: if system is observable return True
         :rtype: bool
         """
         if np.linalg.matrix_rank(self.observability()) == self.A.shape[0]:
@@ -208,6 +210,7 @@ class StateSpace(LinearTimeInvariant):
 
         :param sys_: state space to be calculated
         :type sys_: StateSpace
+
         :return: the dual system
         :rtype: StateSpace
         """
@@ -220,6 +223,18 @@ class StateSpace(LinearTimeInvariant):
         Use:
             solve the equation A.T * X + X * A = -I
 
+        Detail:
+            use sympy to generate a matrix like following one
+            P = [p_00 p_01 ... p_0n]
+                [p_10 p_11 ... p_1n]
+                [p_20 p_21 ... p_2n]
+                [.... .... ... ....]
+                [p_n0 p_n1 ... p_nn]
+            In fact, P is a symmetric matrix
+
+        :param sys_:
+        :type sys_: StateSpace
+
         :return: the matrix X
         :rtype: np.matrix
         """
@@ -227,14 +242,35 @@ class StateSpace(LinearTimeInvariant):
         eye = sym.eye(n)
         p = [[sym.Symbol('p_{0}{1}'.format(i, j)) for i in range(n)] for j in range(n)]
         P = sym.Matrix(p)
+
         eq = sys_.A.T*P + P*sys_.A + eye
+
         p_set = sym.solve(eq)
-        P = P.evalf(subs=p_set)
+        P = P.evalf(subs=p_set)  # evaluate the matrix P
         X = np.asarray(P.tolist(), dtype=float)
         return np.mat(X)
 
 
 def lyapunov(sys_):
+    """
+    Use:
+        solve the equation A.T * X + X * A = -I
+
+    Detail:
+        use sympy to generate a matrix like following one
+        P = [p_00 p_01 ... p_0n]
+            [p_10 p_11 ... p_1n]
+            [p_20 p_21 ... p_2n]
+            [.... .... ... ....]
+            [p_n0 p_n1 ... p_nn]
+        In fact, P is a symmetric matrix
+
+    :param sys_: system
+    :type sys_: StateSpace
+
+    :return: the matrix X
+    :rtype: np.matrix
+    """
     return StateSpace.lyapunov(sys_)
 
 
@@ -302,8 +338,11 @@ def continuous_to_discrete(sys_, sample_time):
 
     :param sys_: continuous system
     :type sys_: StateSpace
+
     :param sample_time: sample time of the discrete system
+    Time unit is second.
     :type sample_time: int | float
+
     :return: discrete system
     :rtype: StateSpace
     """

@@ -24,8 +24,7 @@ class TransferFunction(LinearTimeInvariant):
         gs, *_ = _siso_to_symbol(self.num, self.den)
         return str(gs)
 
-    def __repr__(self):
-        return '0x{0:x}:\n {1:s}'.format(id(self), str(self))
+    __repr__ = __str__
 
     def __eq__(self, other):
         if not isinstance(other, TransferFunction):
