@@ -1,5 +1,5 @@
-# tinyControl
-The tinyControl is a python lib for automatic control system analysis,
+# TinyControl
+TinyControl is a python lib for automatic control system analysis,
 but now only a few features have been implemented.
 
 ## Dependency
