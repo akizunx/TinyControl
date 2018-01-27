@@ -1,7 +1,6 @@
 from unittest import TestCase
 from tcontrol.transferfunction import TransferFunction
 from tcontrol.rlocus import rlocus
-import numpy as np
 
 
 class TestRlocus(TestCase):
@@ -11,3 +10,5 @@ class TestRlocus(TestCase):
         rlocus(TransferFunction([1], [1, 4, 3, 0]))
         rlocus(TransferFunction([1], [1, 2, 1, 0]))
         rlocus(TransferFunction([1, 3], [1, 6, 8, 0]))
+        system = TransferFunction([1, 2], [1, 2, 1, -1])
+        rlocus(system)

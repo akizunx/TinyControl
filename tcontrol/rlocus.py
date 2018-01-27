@@ -26,7 +26,7 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
     :param plot: if plot is true it will draw the picture
     :type plot: bool
     :return: roots of the den and kvect
-    :rtype: (np.ndarray, np.ndarray)
+    :rtype: tuple(np.ndarray, np.ndarray)
     """
     if not sys_.issiso():
         raise NotImplementedError('rlocus is only for TransferFunction now.')
@@ -35,24 +35,21 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
     else:
         system = sys_
 
-    nump = np.poly1d(system.num)
-    denp = np.poly1d(system.den)
     if kvect is None:
+        nump = np.poly1d(system.num)
+        denp = np.poly1d(system.den)
+
         d = _cal_multi_roots(nump, denp)
         k = -denp(d)/nump(d)
         k = k[np.where(k >= 0)]
-        if k.dtype == complex:
+
+        if k.dtype == np.complex:
             k = k[np.where(k.imag == 0)]
             k = np.real(k)
         k = np.sort(k)
+        kvect = _setup_kvect(k)
 
-        kvect = np.linspace(0, k[0], 100)
-        for i in range(1, len(k)):
-            kvect = np.append(kvect, np.linspace(k[i - 1], k[i], 100))
-        kvect = np.append(kvect, np.linspace(k[-1], k[-1]*50, 500))
-
-    ol_gains = kvect
-    roots = _cal_roots(system, ol_gains)
+    roots = _cal_roots(system, kvect)
 
     if plot:
         fig, ax = plt.subplots()
@@ -89,18 +86,33 @@ def _cal_roots(sys_, kvect):
     denp = np.poly1d(sys_.den)
     p = denp + kvect[0]*nump
     order = p.order
-    roots = np.zeros((len(kvect), order), dtype=complex)
+    roots = np.zeros((len(kvect), order), dtype=np.complex)
     for i, k in enumerate(kvect):
         p_ = denp + k*nump
-        roots[i] = p_.roots
-
-    roots = np.sort(roots, axis=1)
+        r = p_.roots
+        r1 = r[np.where(r.imag == 0)]
+        r2 = r[np.where(r.imag != 0)]
+        roots[i] = np.append(r1, r2)
     return roots.T
 
 
 def _cal_multi_roots(nump, denp):
     p = denp*np.polyder(nump) - np.polyder(denp)*nump
     return p.roots
+
+
+def _setup_kvect(k):
+    if len(k):
+        kvect = np.linspace(0, k[0], 50)
+        for i in range(1, len(k)):
+            kvect = np.append(kvect, np.linspace(k[i - 1], k[i], 50))
+        kvect = np.append(kvect, np.linspace(k[-1], k[-1]*50, 100))
+        if kvect[-1] < 10:
+            kvect = np.append(kvect, np.linspace(kvect[-1], kvect[-1] + 10, 10))
+    else:
+        kvect = np.linspace(0, 100, 10000)
+
+    return kvect
 
 
 class RlocusAnnotatedPoint(AnnotatedPoint):
@@ -158,7 +170,7 @@ class RlocusAnnotatedPoint(AnnotatedPoint):
 
 
 class RlocusAttachedCursor(AttachedCursor):
-    def __init__(self, ax, fig, line,*, sys_, **lineprops):
+    def __init__(self, ax, fig, line, *, sys_, **lineprops):
         super().__init__(ax, fig, **lineprops)
         self.ap = RlocusAnnotatedPoint(self.ax, self.ax.figure, sys_)
         self.line = line
