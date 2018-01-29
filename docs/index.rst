@@ -19,6 +19,15 @@ User Guide
    user/quickstart
    user/advanced
 
+Library Reference
+-----------------
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Contents:
+
+   user/lib_ref
+
 
 Indices and tables
 ==================
