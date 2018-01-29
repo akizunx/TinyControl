@@ -5,11 +5,11 @@ but now only a few features have been implemented.
 ## Features
 + Support transfer function and state space models.
 + Time response
-    + impluse
+    + impulse
     + step
     + ramp
     + any input
-+ Frequecy response
++ Frequency response
     + nyquist
     + bode
 + Control system analysis
