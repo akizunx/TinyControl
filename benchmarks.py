@@ -12,7 +12,8 @@ def run1():
     r3 = timeit.timeit("tc.ramp(system, np.linspace(0, 10, 1000), plot=False)",
                        "import tcontrol as tc;import numpy as np;"
                        "system = tc.tf([5, 25, 30], [1, 6, 10, 8])", number=100)
-    print("step: {0:.5f} ms impulse: {0:.5f} ms ramp: {0:.5f} ms".format(r1*10, r2*10, r3*10))
+    print("step: {0:.5f} ms impulse: {0:.5f} ms ramp: {0:.5f} ms".format(r1*10, r2*10,
+                                                                         r3*10))
 
 
 # run rlocus

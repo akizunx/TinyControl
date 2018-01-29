@@ -14,7 +14,8 @@ def grid(b=None, which='major', axis='both', **kwargs):
 
 def figure(num=None, figsize=None, dpi=None, facecolor=None, edgecolor=None, frameon=True,
            FigureClass=_plt.Figure, **kwargs):
-    return _plt.figure(num, figsize, dpi, facecolor, edgecolor, frameon, FigureClass, **kwargs)
+    return _plt.figure(num, figsize, dpi, facecolor, edgecolor, frameon, FigureClass,
+                       **kwargs)
 
 
 def _plot_response_curve(y, t, title):

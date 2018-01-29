@@ -39,9 +39,11 @@ def pzmap(sys_, title='pole-zero map', *, plot=True):
         l1 = None
         l2 = None
         if zero.shape[0]:
-            l1 = plt.scatter(np.real(zero), np.imag(zero), s=30, marker='o', color='#069af3')
+            l1 = plt.scatter(np.real(zero), np.imag(zero), s=30, marker='o',
+                             color='#069af3')
         if pole.shape[0]:
-            l2 = plt.scatter(np.real(pole), np.imag(pole), s=30, marker='x', color='#fdaa48')
+            l2 = plt.scatter(np.real(pole), np.imag(pole), s=30, marker='x',
+                             color='#fdaa48')
 
         plt.legend([l1, l2], ["zero", "pole"])
         plt.grid()
