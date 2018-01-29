@@ -1,16 +1,20 @@
 import numbers
+from collections import Iterable
 
 from tcontrol.lti import LinearTimeInvariant
 import numpy as np
 import sympy as sym
 
 # TODO: trans function of MIMO
-# TODO: improve error msg of class TransferFunction
 
 __all__ = ["TransferFunction", "tf", "zpk", "ss2tf"]
 
 
 class TransferFunction(LinearTimeInvariant):
+    """
+    a class implement the transfer function model
+    """
+
     def __init__(self, num, den, *, dt=None):
         num = np.array(np.poly1d(num))
         den = np.array(np.poly1d(den))
@@ -21,7 +25,7 @@ class TransferFunction(LinearTimeInvariant):
         self.den = den
 
     def __str__(self):
-        gs, *_ = _siso_to_symbol(self.num, self.den)
+        gs, *_ = _tf_to_symbol(self.num, self.den)
         return str(gs)
 
     __repr__ = __str__
@@ -52,7 +56,8 @@ class TransferFunction(LinearTimeInvariant):
             return TransferFunction(np.polyadd(self.num, other.num), self.den, dt=dt)
 
         den = np.convolve(self.den, other.den)
-        num = np.polyadd(np.convolve(self.num, other.den), np.convolve(other.num, self.den))
+        num = np.polyadd(np.convolve(self.num, other.den),
+                         np.convolve(other.num, self.den))
 
         return TransferFunction(num, den, dt=dt)
 
@@ -86,21 +91,34 @@ class TransferFunction(LinearTimeInvariant):
     __rmul__ = __mul__
 
     def pole(self):
+        """
+        Return poles of the system.
+
+        :return: poles of the system
+        :rtype: numpy.ndarray
+        """
         return np.roots(self.den)
 
     def zero(self):
+        """
+        Return zeros of the system.
+
+        :return: zeros of the system
+        :rtype: numpy.ndarray
+        """
         return np.roots(self.num)
 
     def feedback(self, other=1, sign=1):
         """
+        Add the feedback channel.
 
         :param other: the transfer function of the feedback path
         :type other: TransferFunction | int
         :param sign: if sign is 1 function will create the negative feedback.
-                     otherwise the positive feedback
+                     if sign is -1, the positive feedback
         :type sign: int
-        :return:
-        :rtype:
+        :return: original system with a feedback channel
+        :rtype: TransferFunction
         """
         if other == 1:
             other = TransferFunction([1], [1], dt=self.dt)
@@ -116,13 +134,14 @@ class TransferFunction(LinearTimeInvariant):
 
 def _get_dt(sys1, sys2):
     """
+    Determine the sampling time of the new system.
 
-    :param sys1:
+    :param sys1: the first system
     :type sys1: TransferFunction
-    :param sys2:
+    :param sys2: the second system
     :type sys2: TransferFunction
-    :return:
-    :rtype:
+    :return: sampling time
+    :rtype: numbers.Real
     """
     if sys1.dt == sys2.dt or (sys1.dt is not None and sys2.dt is None):
         dt = sys1.dt
@@ -130,11 +149,12 @@ def _get_dt(sys1, sys2):
         dt = sys2.dt
     else:
         raise ValueError(
-            'Expected the same sampling time. got sys1:{0} sys2:{1}'.format(sys1.dt, sys2.dt))
+            'Expected the same sampling time. got sys1:{0} sys2:{1}'.format(sys1.dt,
+                                                                            sys2.dt))
     return dt
 
 
-def _siso_to_symbol(num, den):
+def _tf_to_symbol(num, den):
     s = sym.Symbol('s')
     cs = sym.Poly.from_list(num, gens=s)
     rs = sym.Poly.from_list(den, gens=s)
@@ -143,7 +163,7 @@ def _siso_to_symbol(num, den):
 
 
 def _poly_simplify(num, den):
-    _, cs, rs = _siso_to_symbol(num, den)
+    _, cs, rs = _tf_to_symbol(num, den)
     r = np.array(sym.gcd(cs, rs).as_poly().all_coeffs()).astype(num.dtype)
     if not np.array_equal(np.array([1]), r):
         num = np.polydiv(num, r)[0]
@@ -182,22 +202,21 @@ def _poly_simplify(num, den):
 
 def tf(*args):
     """
-    Use:
-        Create a transfer function of a system
+    Create a transfer function model of a system.
 
-    Example:
+    :param args: pass in num
+    :type args: TransferFunction | list[numbers.Real]
+    :return: the transfer function of the system
+    :rtype: TransferFunction
+
+    :Example:
         >>> from tcontrol import tf
         >>> system = tf([1, 1], [1, 0.5, 1])
         >>> print(system)
-        (1.0*s + 1.0)/(1.0*s**2 + 0.5*s + 1.0)
+        (s + 1)/(1.0*s**2 + 0.5*s + 1.0)
         >>> system = tf(system)
         >>> print(system)
-        (1.0*s + 1.0)/(1.0*s**2 + 0.5*s + 1.0)
-
-    :param args:
-    :type args: SISO | list[int | float]
-    :return: the transfer function of the system
-    :rtype: SISO
+        (s + 1)/(1.0*s**2 + 0.5*s + 1.0)
     """
     length = len(args)
     if length == 2:
@@ -222,24 +241,22 @@ def tf(*args):
 
 def zpk(z, p, k):
     """
-    Use:
-        Create a transfer function by zeros, poles, and the gain k
+    Create a transfer function by zeros, poles, and the gain k
 
-    Example:
+    :param z: zeros of a system
+    :type z: np.ndarray | Iterable
+    :param p: poles of a system
+    :type p: np.ndarray | Iterable
+    :param k: the gain of the system
+    :type k: numbers.Real
+    :return: the transfer function of the system
+    :rtype: TransferFunction
+
+    :Example:
         >>> from tcontrol import zpk
         >>> system = zpk([], [1, 0.5, 1], 5.2)
         >>> print(system)
         5.2/(1.0*s**3 - 2.5*s**2 + 2.0*s - 0.5)
-
-
-    :param z: zeros of a system
-    :type z: np.ndarray | list | tuple
-    :param p: poles of a system
-    :type p: np.ndarray | list | tuple
-    :param k: the gain of the system
-    :type k: int | float
-    :return: the transfer function of the system
-    :rtype: SISO
     """
     num = np.array([k])
     for zi in z:
@@ -253,11 +270,12 @@ def zpk(z, p, k):
 
 def ss2tf(sys_):
     """
+    Covert state space model to  transfer function model.
 
-    :param system:
-    :type system: StateSpace
-    :return:
-    :rtype:
+    :param sys_: system
+    :type sys_: StateSpace
+    :return: corresponded transfer function model
+    :rtype: TransferFunction
     """
     T = sys_.to_controllable_form()
     A_ = T.I*sys_.A*T

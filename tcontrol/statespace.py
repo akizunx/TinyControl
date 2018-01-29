@@ -29,13 +29,16 @@ class StateSpace(LinearTimeInvariant):
                 "{0} != {1}, wrong shape of A".format(A.shape[0], A.shape[1]))
         if B.shape[0] != A.shape[0]:
             raise ValueError(
-                "{0} != ({1}, {2}), wrong shape of B".format(B.shape, A.shape[0], B.shape[1]))
+                "{0} != ({1}, {2}), wrong shape of B".format(B.shape, A.shape[0],
+                                                             B.shape[1]))
         if C.shape[1] != A.shape[0]:
             raise ValueError(
-                "{0} != ({1}, {2}), wrong shape of C".format(C.shape, A.shape[0], C.shape[0]))
+                "{0} != ({1}, {2}), wrong shape of C".format(C.shape, A.shape[0],
+                                                             C.shape[0]))
         if D.shape != (C.shape[0], B.shape[1]):
             raise ValueError(
-                "{0} != ({1}, {2}), wrong shape of D".format(D.shape, C.shape[0], B.shape[1]))
+                "{0} != ({1}, {2}), wrong shape of D".format(D.shape, C.shape[0],
+                                                             B.shape[1]))
 
         super().__init__(B.shape[1], C.shape[0], dt)
         self.A = A
@@ -126,8 +129,7 @@ class StateSpace(LinearTimeInvariant):
 
     def pole(self):
         """
-        Use:
-            return the poles of the system
+        Get the poles of the system.
 
         :return: poles of the system
         :rtype: np.array
@@ -136,10 +138,9 @@ class StateSpace(LinearTimeInvariant):
 
     def controllability(self):
         """
-        Use:
-            calculate and return the matrix [B A*B A^2*B ... A^(n-1)*B]
+        Calculate and return the matrix [B A*B A^2*B ... A^(n-1)*B].
 
-        :return: the matrix [B A*B A^2*B ... A^(n-1)*B]
+        :return: the previous matrix
         :rtype: np.matrix
         """
         tmp = self.B.copy()
@@ -157,8 +158,7 @@ class StateSpace(LinearTimeInvariant):
 
     def is_controllable(self):
         """
-        Use:
-            the rank of the controllability matrix
+        Return the rank of the controllability matrix.
 
         :return: if system is controllable return True
         :rtype: bool
@@ -170,18 +170,16 @@ class StateSpace(LinearTimeInvariant):
 
     def observability(self):
         """
-        Use:
-            calculate and return the matrix [C        ]
-                                            [C*A      ]
-                                            [C*A^2    ]
-                                            [   ...   ]
-                                            [C*A^(n-1)]
+        Calculate and return the matrix
+        ::
 
-        :return: the matrix [C        ]
-                            [C*A      ]
-                            [C*A^2    ]
-                            [   ...   ]
-                            [C*A^(n-1)]
+            [C        ]
+            [C*A      ]
+            [C*A^2    ]
+            [   ...   ]
+            [C*A^(n-1)]
+
+        :return: the previous matrix
         :rtype: np.matrix
         """
         tmp = self.C.copy()
@@ -191,8 +189,8 @@ class StateSpace(LinearTimeInvariant):
 
     def is_observable(self):
         """
-        Use:
-            the rank of the observability matrix
+
+           the rank of the observability matrix
 
         :return: if system is observable return True
         :rtype: bool
@@ -205,8 +203,7 @@ class StateSpace(LinearTimeInvariant):
     @classmethod
     def dual_system(cls, sys_):
         """
-        Use:
-            generate the dual system
+        Generate the dual system.
 
         :param sys_: state space to be calculated
         :type sys_: StateSpace
@@ -220,19 +217,20 @@ class StateSpace(LinearTimeInvariant):
     @staticmethod
     def lyapunov(sys_):
         """
-        Use:
-            solve the equation A.T * X + X * A = -I
+        Solve the equation A.T * X + X * A = -I
 
-        Detail:
-            use sympy to generate a matrix like following one
+        Use sympy to generate a matrix like following one
+        ::
+
             P = [p_00 p_01 ... p_0n]
                 [p_10 p_11 ... p_1n]
                 [p_20 p_21 ... p_2n]
                 [.... .... ... ....]
                 [p_n0 p_n1 ... p_nn]
-            In fact, P is a symmetric matrix
 
-        :param sys_:
+        In fact, P is a symmetric matrix
+
+        :param sys_: system
         :type sys_: StateSpace
 
         :return: the matrix X
@@ -253,17 +251,18 @@ class StateSpace(LinearTimeInvariant):
 
 def lyapunov(sys_):
     """
-    Use:
-        solve the equation A.T * X + X * A = -I
+    Solve the equation A.T * X + X * A = -I
 
-    Detail:
-        use sympy to generate a matrix like following one
+    Use sympy to generate a matrix like following one
+    ::
+
         P = [p_00 p_01 ... p_0n]
             [p_10 p_11 ... p_1n]
             [p_20 p_21 ... p_2n]
             [.... .... ... ....]
             [p_n0 p_n1 ... p_nn]
-        In fact, P is a symmetric matrix
+
+    In fact, P is a symmetric matrix
 
     :param sys_: system
     :type sys_: StateSpace
@@ -275,6 +274,17 @@ def lyapunov(sys_):
 
 
 def ss(*args, **kwargs):
+    """
+    Create a state space model of the system.
+
+    :param args: A, B, C, D of a system.
+                 Or a StateSpace instance.
+    :type args:
+    :param kwargs: contain sampling time or not
+    :type kwargs: dict
+    :return: the state space of the system
+    :rtype: StateSpace
+    """
     length = len(args)
     if length == 1:
         _sys = args[0]
@@ -292,11 +302,18 @@ def ss(*args, **kwargs):
 
 
 def tf2ss(*args):
+    """
+    Convert transfer function model to state space model.
+
+    :return: corresponded transfer function model
+    :rtype: StateSpace
+    """
     if len(args) == 1:
         try:
             num, den, dt = args[0].num, args[0].den, args[0].dt
         except AttributeError as e:
-            raise TypeError("TransferFunction expected got {0}".format(type(args[0]))) from e
+            raise TypeError(
+                "TransferFunction expected got {0}".format(type(args[0]))) from e
     elif len(args) == 2:
         num, den = args
         dt = None
@@ -333,13 +350,12 @@ def tf2ss(*args):
 
 def continuous_to_discrete(sys_, sample_time):
     """
-    Use:
-        convert continuous system to discrete system
+    Convert continuous system to discrete system.
 
     :param sys_: continuous system
     :type sys_: StateSpace
 
-    :param sample_time: sample time of the discrete system
+    :param sample_time: sample time of the discrete system.\
     Time unit is second.
     :type sample_time: int | float
 

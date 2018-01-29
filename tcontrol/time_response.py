@@ -1,8 +1,8 @@
-# from tcontrol.lti import LinearTimeInvariant as LTI
 from functools import partial
 import warnings
+import numbers
 
-from tcontrol.transferfunction import TransferFunction, _siso_to_symbol
+from tcontrol.transferfunction import TransferFunction, _tf_to_symbol
 from tcontrol.statespace import StateSpace, continuous_to_discrete, tf2ss
 from tcontrol.plot_utility import _plot_response_curve
 import numpy as np
@@ -30,7 +30,7 @@ def __get_cs(sys_, input_signal):
 
     signal_table = {'step': 1/s, 'impulse': 1, '0': 0, 'ramp': 1/s**2,
                     'user': sym.laplace_transform(input_expr, t, s)[0]}
-    gs, *_ = _siso_to_symbol(sys_.num, sys_.den)
+    gs, *_ = _tf_to_symbol(sys_.num, sys_.den)
     cs = gs*signal_table.get(input_signal, signal_table["user"])
     return cs
 
@@ -118,17 +118,21 @@ def __ramp(sys_, t=None, *, plot=True):
 # convert system to state space then get result
 def _any_input(sys_, t, input_signal=0, init_cond=None):
     """
+    Accept any input signal, then calculate the response of the system.
 
-    :param sys_: the system to be calculated
+    :param sys_: the system
     :type sys_: TransferFunction | StateSpace
     :param t: time
-    :type t: None | np.ndarray
-    :param input_signal: a array contain the input signal
-    :type input_signal: np.ndarray | tuple(iterable)
-    :param init_cond: initial condition
-    :type init_cond: None | int | float | np.ndarray
-    :return: output and time
-    :rtype:
+    :type t: array_like
+    :param input_signal: input signal accepted by the system
+    :type input_signal: numbers.Real | np.ndarray
+    :param init_cond: initial condition of the system
+    :type init_cond: None | numbers.Real | np.ndarray
+
+    :return: system output and time array
+    :rtype: tuple[np.ndarray, np.ndarray]
+
+    .. note:: This is internal api.
     """
     # convert transfer function or continuous system to discrete system
     dt = t[1] - t[0]
@@ -203,6 +207,11 @@ def _cal_y(C, D, n, x, u):
 
 
 def step(sys_, t=None, *, plot=True):
+    """
+    step response of the system
+
+    .. seealso:: any_input
+    """
     if t is None:
         t = np.linspace(0, 10, 1000)
 
@@ -214,6 +223,11 @@ def step(sys_, t=None, *, plot=True):
 
 
 def impulse(sys_, t=None, *, plot=True):
+    """
+    impulse response of the system
+
+    .. seealso:: any_input
+    """
     if t is None:
         t = np.linspace(0, 10, 1000)
 
@@ -227,6 +241,11 @@ def impulse(sys_, t=None, *, plot=True):
 
 
 def ramp(sys_, t=None, *, plot=True):
+    """
+    ramp response of the system
+
+    .. seealso:: any_input
+    """
     if t is None:
         t = np.linspace(0, 10, 1000)
 
@@ -238,6 +257,23 @@ def ramp(sys_, t=None, *, plot=True):
 
 
 def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
+    """
+    Accept any input signal, then calculate the response of the system.
+
+    :param sys_: the system
+    :type sys_: TransferFunction | StateSpace
+    :param t: time
+    :type t: array_like
+    :param input_signal: input signal accepted by the system
+    :type input_signal: numbers.Real | np.ndarray
+    :param init_cond: initial condition of the system
+    :type init_cond: None | numbers.Real | np.ndarray
+    :param plot: If plot is True, it will show the response curve.
+    :type plot: bool
+
+    :return: system output and time array
+    :rtype: tuple[np.ndarray, np.ndarray]
+    """
     y, t = _any_input(sys_, t, input_signal, init_cond)
     if plot:
         _plot_response_curve(y, t, "response")
