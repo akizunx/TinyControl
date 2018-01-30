@@ -41,6 +41,7 @@ Function
 .. autofunction:: tf2ss
 .. autofunction:: continuous_to_discrete
 .. autofunction:: lyapunov
+.. autofunction:: place
 
 Time Response
 -------------

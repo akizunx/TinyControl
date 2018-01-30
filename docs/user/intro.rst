@@ -1,7 +1,7 @@
 Introduction
 ============
 
-Proposal
+Goal
 --------
 Intend to provide a simple toolset for user to analyze control system.
 
