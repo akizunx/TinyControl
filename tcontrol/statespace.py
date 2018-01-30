@@ -200,6 +200,25 @@ class StateSpace(LinearTimeInvariant):
         else:
             return False
 
+    def place(self, poles):
+        """
+        Configure system poles by using state feedback.
+
+        The feedback matrix K is calculated by A - B*K.
+
+        :param poles: expected system poles
+        :type poles: array_like
+        :return: the feedback matrix K
+        :rtype: np.matrix
+        """
+        T = self.to_controllable_form()
+        A = T.I * self.A * T
+        p = np.poly(poles)[1:]
+        p = p[::-1]
+        a = np.asarray(A[-1]).reshape(-1)
+        K = p[::-1] + a
+        return K*T.I
+
     @classmethod
     def dual_system(cls, sys_):
         """
@@ -247,6 +266,28 @@ class StateSpace(LinearTimeInvariant):
         P = P.evalf(subs=p_set)  # evaluate the matrix P
         X = np.asarray(P.tolist(), dtype=float)
         return np.mat(X)
+
+def place(A, B, poles):
+    """
+    Configure system poles by using state feedback.
+
+    The feedback matrix K is calculated by A - B*K.
+
+    :param A: system matrix
+    :type A: matrix_like
+    :param B: input matrix
+    :type B: matrix_like
+    :param poles: expected system poles
+    :type poles: array_like
+    :return: feedback matrix K
+    :rtype: np.matrix
+    """
+    A = np.mat(A)
+    B = np.mat(B)
+    C = np.zeros((1, A.shape[0]))
+    D = np.zeros((1, B.shape[1]))
+    system = StateSpace(A, B, C, D)
+    return system.place(poles)
 
 
 def lyapunov(sys_):
