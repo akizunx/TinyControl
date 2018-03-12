@@ -267,6 +267,7 @@ class StateSpace(LinearTimeInvariant):
         X = np.asarray(P.tolist(), dtype=float)
         return np.mat(X)
 
+
 def place(A, B, poles):
     """
     Configure system poles by using state feedback.
@@ -342,27 +343,22 @@ def ss(*args, **kwargs):
     return StateSpace(A, B, C, D, dt=dt)
 
 
-def tf2ss(*args):
+def tf2ss(sys_):
     """
     Convert transfer function model to state space model.
+
+    :param sys_: the system
+    :type sys_: TransferFunction
 
     :return: corresponded transfer function model
     :rtype: StateSpace
     """
-    if len(args) == 1:
-        try:
-            num, den, dt = args[0].num, args[0].den, args[0].dt
-        except AttributeError as e:
-            raise TypeError(
-                "TransferFunction expected got {0}".format(type(args[0]))) from e
-    elif len(args) == 2:
-        num, den = args
-        dt = None
-    else:
-        raise TypeError
-    num, den = np.poly1d(num), np.poly1d(den)
-    if num.order > den.order:
-        raise ValueError("wrong order num: {0} > den :{1}".format(num.order, den.order))
+    try:
+        num = np.poly1d(sys_.num)
+        den = np.poly1d(sys_.den)
+    except AttributeError as e:
+        raise TypeError("TransferFunction expected got {0}".format(type(sys_))) from e
+    dt = sys_.dt
 
     if den[den.order] != 1:
         num /= den[den.order]
