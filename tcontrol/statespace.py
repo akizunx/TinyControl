@@ -119,13 +119,39 @@ class StateSpace(LinearTimeInvariant):
         D = self.D*other.D
         return StateSpace(A, C.T, B.T, D, dt=dt)
 
-    def feedback(self, K=1, sign=1):  # TODO: need to be reimplemented
-        try:
-            K = _convert_to_ss(K)
-        except TypeError as e:
-            raise TypeError from e
-        A = self.A - self.B*K*self.C
-        return StateSpace(A, self.B.copy(), self.C.copy(), np.mat([[0]]))
+    def feedback(self, k, sign=-1):
+        """
+
+        :param k:
+        :type k: StateSpace
+        :param sign:
+        :type sign:
+        :return:
+        :rtype:
+        """
+        F = np.eye(self.inputs) - sign*k.D*self.D
+        F_inv = F.I
+        F_inv_D2 = F_inv*k.D
+        F_inv_C2 = F_inv*k.C
+
+        A1 = self.A + sign*self.B*F_inv_D2*self.C
+        A2 = sign*self.B*F_inv_C2
+        A3 = k.B*(self.C + sign*self.D*F_inv_D2*self.C)
+        A4 = k.A + sign*k.B*self.D*F_inv_C2
+        A = np.concatenate((np.concatenate((A1, A3)),
+                            np.concatenate((A2, A4))), axis=1)
+
+        B1 = self.B + sign*self.B*F_inv_D2*self.D
+        B2 = k.B*self.D + sign*k.B*self.D*F_inv_D2*self.D
+        B = np.concatenate((B1, B2))
+
+        C1 = self.C + sign*self.D*F_inv_D2*self.C
+        C2 = sign*self.D*F_inv_C2
+        C = np.concatenate((C1, C2), axis=1)
+
+        D = self.D + sign*self.D*F_inv_D2*self.D
+
+        return StateSpace(A, B, C, D)
 
     def pole(self):
         """
@@ -212,7 +238,7 @@ class StateSpace(LinearTimeInvariant):
         :rtype: np.matrix
         """
         T = self.to_controllable_form()
-        A = T.I * self.A * T
+        A = T.I*self.A*T
         p = np.poly(poles)[1:]
         p = p[::-1]
         a = np.asarray(A[-1]).reshape(-1)
