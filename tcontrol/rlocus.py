@@ -90,8 +90,8 @@ def _cal_roots(sys_, kvect):
     for i, k in enumerate(kvect):
         p_ = denp + k*nump
         r = p_.roots
-        r1 = r[np.where(r.imag == 0)]
-        r2 = r[np.where(r.imag != 0)]
+        r1 = r[r.imag == 0]
+        r2 = r[r.imag != 0]
         roots[i] = np.append(r1, r2)
     return roots.T
 
