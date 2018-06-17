@@ -26,7 +26,17 @@ class TransferFunction(LinearTimeInvariant):
 
     def __str__(self):
         gs, *_ = _tf_to_symbol(self.num, self.den)
-        return str(gs)
+        gs = str(gs).replace('(', '').replace(')', '')
+        cs, rs = gs.split('/')
+        len1 = len(cs)
+        len2 = len(rs)
+        if self.dt is None:
+            return "{0}{1}\n{2}\n{3}\n".format(' '*((len2 - len1)//2 + 1), cs, '-'*len2,
+                                               rs)
+        else:
+            r = "{0}{1}\n{2}\n{3}\nsample time:{4}s\n".format(
+                ' '*((len2 - len1)//2 + 1), cs, '-'*len2, rs, self.dt)
+            return r.replace('s', 'z')
 
     __repr__ = __str__
 
@@ -36,7 +46,7 @@ class TransferFunction(LinearTimeInvariant):
         return np.array_equal(self.num, other.num) and np.array_equal(self.den, other.den)
 
     def __neg__(self):
-        num = -1 * self.num
+        num = -1*self.num
         return TransferFunction(num, self.den, dt=self.dt)
 
     def __add__(self, other):
