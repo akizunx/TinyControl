@@ -235,14 +235,13 @@ def tf(*args):
     elif length == 3:
         num, den, dt = args
     elif length == 1:
-        if isinstance(args[0], TransferFunction):
+        try:
             num = args[0].num
             den = args[0].den
             dt = args[0].dt
-        else:
+        except AttributeError:
             raise TypeError(
                 "type of arg should be TransferFunction, got {0}".format(type(args[0])))
-
     else:
         raise ValueError('1, 2 or 3 arg(s) expected. received {0}'.format(length))
     sys_ = TransferFunction(num, den, dt=dt)
