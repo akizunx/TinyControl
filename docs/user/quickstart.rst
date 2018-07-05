@@ -16,7 +16,9 @@ Initialize a transfer function model.
 
     >>> system = tc.tf([1], [1, 1])
     >>> print(system)
-    1/(s + 1)
+       1
+    -----
+    s + 1
 
 Or, you can initialize a state space model.
 ::
@@ -47,7 +49,9 @@ Connect two systems in series.
     >>> sys2 = tc.tf([2], [2, 1])
     >>> sys3 = sys1 * sys2
     >>> print(sys3)
-    2/(2*s**2 + 3*s + 1)
+            2
+    ----------------
+    2*s**2 + 3*s + 1
 
 Connect two systems in parallel.
 ::
@@ -56,7 +60,9 @@ Connect two systems in parallel.
     >>> sys2 = tc.tf([2], [2, 1])
     >>> sys3 = sys1 + sys2
     >>> print(sys3)
-    (4*s + 3)/(2*s**2 + 3*s + 1)
+         4*s + 3
+    ----------------
+    2*s**2 + 3*s + 1
 
 Add feedback to a system. The default is negative feedback.
 ::
@@ -64,13 +70,17 @@ Add feedback to a system. The default is negative feedback.
     >>> sys1 = tc.tf([1], [1, 1])
     >>> sys2 = tc.tf([2], [2, 1])
     >>> sys1.feedback(sys2)
-    (2*s + 1)/(2*s**2 + 3*s + 3)
+        2*s + 1
+    ----------------
+    2*s**2 + 3*s + 3
 
 If it is a positive feedback, pass --1 to the function.
 ::
 
     >>> sys1.feedback(sys2, -1)
-    (2*s + 1)/(-2*s**2 - 3*s + 1)
+          2*s + 1
+    -----------------
+    -2*s**2 - 3*s + 1
 
 Evaluate Time Response
 ----------------------
@@ -176,4 +186,6 @@ Use **ss2tf** to convert state space to transfer function.
     >>> C = [[1, 0]]
     >>> system = tc.ss(A, B, C, 0)
     >>> tc.ss2tf(system)
-    1.0/(1.0*s**2 + 2.0*s)
+           1.0
+    ----------------
+    1.0*s**2 + 2.0*s
