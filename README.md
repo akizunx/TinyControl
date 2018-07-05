@@ -26,6 +26,7 @@ __NOTICE__
 + [Numpy](http://www.numpy.org)
 + [Sympy](http://www.sympy.org)
 + [Matplotlib](https://matplotlib.org)
++ [nose](https://github.com/nose-devs/nose) (optional for test)
 
 ## Installation
     python -m setup.py install
@@ -34,7 +35,9 @@ __NOTICE__
     >>> import tcontrol as tc
     >>> system = tc.tf([1], [1, 1])
     >>> print(system)
-    1/(s + 1)
+       1
+    -----
+    s + 1
     >>> tc.tf2ss(system)
     A:
     [[-1.]]
