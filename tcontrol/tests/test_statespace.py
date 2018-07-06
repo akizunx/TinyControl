@@ -2,6 +2,7 @@ from unittest import TestCase
 import numpy as np
 from tcontrol.statespace import *
 from tcontrol.transferfunction import tf, ss2tf
+from ..exception import WrongNumberOfArguments
 
 
 class TestStateSpace(TestCase):
@@ -92,7 +93,8 @@ class TestStateSpace(TestCase):
 
     def test_ss(self):
         self.assertEqual(ss(self.A, self.B, self.C, self.D), self.ss_)
-        self.assertRaises(ValueError, ss, self.A, self.B, self.C, self.D, self.B)
+        self.assertRaises(WrongNumberOfArguments, ss, self.A, self.B, self.C, self.D,
+                          self.B)
         self.assertEqual(ss(self.tf_), self.ss_)
 
     def test_tf2ss(self):

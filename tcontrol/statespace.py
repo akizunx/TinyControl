@@ -1,6 +1,7 @@
 import warnings
 
 from tcontrol.lti import LinearTimeInvariant
+from .exception import *
 import numpy as np
 import sympy as sym
 
@@ -72,9 +73,8 @@ class StateSpace(LinearTimeInvariant):
 
     def __add__(self, other):
         if self.D.shape != other.D.shape:
-            raise ValueError(
-                "shapes of D are not equal {0}, {1}".format(self.D.shape,
-                                                            other.D.shape))
+            raise ValueError("shapes of D are not equal {0}, {1}".format(self.D.shape,
+                                                                         other.D.shape))
 
         if self.dt is None and other.dt is not None:
             dt = other.dt
@@ -363,7 +363,7 @@ def ss(*args, **kwargs):
     elif length == 4:
         A, B, C, D = args
     else:
-        raise ValueError("1 or 4 args expected got {0}".format(length))
+        raise WrongNumberOfArguments("1 or 4 args expected got {0}".format(length))
     dt = kwargs.get('dt')
 
     return StateSpace(A, B, C, D, dt=dt)

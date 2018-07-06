@@ -1,7 +1,8 @@
 import numbers
 from collections import Iterable
 
-from tcontrol.lti import LinearTimeInvariant
+from .lti import LinearTimeInvariant
+from .exception import *
 import numpy as np
 import sympy as sym
 
@@ -243,7 +244,8 @@ def tf(*args):
             raise TypeError(
                 "type of arg should be TransferFunction, got {0}".format(type(args[0])))
     else:
-        raise ValueError('1, 2 or 3 arg(s) expected. received {0}'.format(length))
+        raise WrongNumberOfArguments(
+            '1, 2 or 3 arg(s) expected. received {0}'.format(length))
     sys_ = TransferFunction(num, den, dt=dt)
     return sys_
 

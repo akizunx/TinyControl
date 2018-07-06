@@ -1,5 +1,6 @@
 from unittest import TestCase
 from tcontrol.transferfunction import TransferFunction, tf, zpk
+from ..exception import *
 import numpy as np
 
 
@@ -65,5 +66,5 @@ class TestTransferFunction(TestCase):
         self.assertEqual(s1, s2)
 
     def test_bad_input(self):
-        self.assertRaises(ValueError, tf, *[[1], 2, 3, 4])
+        self.assertRaises(WrongNumberOfArguments, tf, *[[1], 2, 3, 4])
         self.assertRaises(TypeError, tf, [1, 3, 4, 5])
