@@ -268,27 +268,31 @@ class StateSpace(LinearTimeInvariant):
         ::
 
             P = [p_00 p_01 ... p_0n]
-                [p_10 p_11 ... p_1n]
-                [p_20 p_21 ... p_2n]
+                [p_01 p_11 ... p_1n]
+                [p_02 p_12 ... p_2n]
                 [.... .... ... ....]
-                [p_n0 p_n1 ... p_nn]
+                [p_0n p_1n ... p_nn]
 
-        In fact, P is a symmetric matrix
+        P is a symmetric matrix.
 
         :param sys_: system
         :type sys_: StateSpace
 
-        :return: the matrix X
-        :rtype: np.matrix
+        :return: the matrix X or None if there doesn't exist a solve
+        :rtype: np.matrix | None
         """
         n = sys_.A.shape[0]
         eye = sym.eye(n)
-        p = [[sym.Symbol('p_{0}{1}'.format(i, j)) for i in range(n)] for j in range(n)]
+        p = [[sym.Symbol((f'p_{i}{j}', f'p_{j}{i}')[i <= j]) for i in range(n)]
+             for j in range(n)]
         P = sym.Matrix(p)
 
         eq = sys_.A.T*P + P*sys_.A + eye
 
         p_set = sym.solve(eq)
+        if p_set == []:
+            return None
+
         P = P.evalf(subs=p_set)  # evaluate the matrix P
         X = np.asarray(P.tolist(), dtype=float)
         return np.mat(X)

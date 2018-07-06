@@ -121,3 +121,5 @@ class TestStateSpace(TestCase):
         C = [1, 0]
         ss_ = StateSpace(A, B, C, 0)
         self.assertTrue(np.array_equal(lyapunov(ss_), [[1.25, 0.25], [0.25, 0.25]]))
+        system = tf2ss(tf([0.5], [1, 1, 0]))
+        self.assertEqual(None, lyapunov(system))
