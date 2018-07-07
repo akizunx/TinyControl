@@ -35,9 +35,9 @@ class TransferFunction(LinearTimeInvariant):
             return "{0}{1}\n{2}\n{3}\n".format(' '*((len2 - len1)//2 + 1), cs, '-'*len2,
                                                rs)
         else:
-            r = "{0}{1}\n{2}\n{3}\nsample time:{4}s\n".format(
-                ' '*((len2 - len1)//2 + 1), cs, '-'*len2, rs, self.dt)
-            return r.replace('s', 'z')
+            r = "{0}{1}\n{2}\n{3}\n".format(' '*((len2 - len1)//2 + 1), cs, '-'*len2, rs)
+            r = r.replace('s', 'z')
+            return r + f'sample time:{self.dt}s'
 
     __repr__ = __str__
 
@@ -216,7 +216,8 @@ def tf(*args):
     Create a transfer function model of a system.
 
     :param args: pass in num
-    :type args: TransferFunction | list[numbers.Real]
+    :type args: TransferFunction | List[numbers.Real] |
+                numbers.Real
     :return: the transfer function of the system
     :rtype: TransferFunction
 
