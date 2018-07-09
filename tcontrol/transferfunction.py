@@ -211,7 +211,7 @@ def _poly_simplify(num, den):
 #     return r
 
 
-def tf(*args):
+def tf(*args, **kwargs):
     """
     Create a transfer function model of a system.
 
@@ -244,9 +244,15 @@ def tf(*args):
         except AttributeError:
             raise TypeError(
                 "type of arg should be TransferFunction, got {0}".format(type(args[0])))
+    elif length == 0:
+        num = kwargs.get('num')
+        den = kwargs.get('den')
+        dt = kwargs.get('dt')
+        if num is None and den is None and dt is None:
+            raise WrongNumberOfArguments(f'1, 2 or 3 arg(s) expected. received {length}')
     else:
-        raise WrongNumberOfArguments(
-            '1, 2 or 3 arg(s) expected. received {0}'.format(length))
+        raise WrongNumberOfArguments(f'1, 2 or 3 arg(s) expected. received {length}')
+
     sys_ = TransferFunction(num, den, dt=dt)
     return sys_
 
