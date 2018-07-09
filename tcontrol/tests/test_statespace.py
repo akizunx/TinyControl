@@ -59,7 +59,18 @@ class TestStateSpace(TestCase):
         D_ = [[0.445586200710900, 0.709364830858073],
               [0.646313010111265, 0.754686681982361]]
         s2 = ss(A_, B_, C_, D_)
-        s1.feedback(s2)
+        sys_ = s1.feedback(s2)
+        ans_b = np.array([[0.497199047022938, 0.241439722567989],
+                         [0.00397672393087681, 0.227709022266958],
+                         [0.538296661406946, 0.149857420314700],
+                         [0.132223192796285, 0.0885007994366726],
+                         [0.293713307787898,0.543698319397011],
+                         [-0.117388364568095, 0.367561733989439]])
+        ans_d = np.array([[-0.192541214208884, 0.523103714748680],
+                          [0.475954939644619, 0.118861134193000]])
+
+        self.assertTrue(np.all(np.less_equal(np.abs(sys_.B - ans_b), 1e-6)))
+        self.assertTrue(np.all(np.less_equal(np.abs(sys_.D - ans_d), 1e-6)))
 
     def test_pole(self):
         self.assertTrue(np.array_equal(self.ss_.pole(), ss2tf(self.ss_).pole()))
