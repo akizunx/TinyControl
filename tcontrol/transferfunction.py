@@ -1,5 +1,6 @@
 import numbers
 from collections import Iterable
+from typing import Tuple
 
 from .lti import LinearTimeInvariant
 from .exception import *
@@ -44,7 +45,12 @@ class TransferFunction(LinearTimeInvariant):
     def __eq__(self, other):
         if not isinstance(other, TransferFunction):
             return False
-        return np.array_equal(self.num, other.num) and np.array_equal(self.den, other.den)
+        flag = True
+        if not self.isctime():
+            flag = self.dt == other.dt
+        return np.array_equal(self.num, other.num) and \
+               np.array_equal(self.den, other.den) and \
+               flag
 
     def __neg__(self):
         num = -1*self.num
@@ -141,6 +147,56 @@ class TransferFunction(LinearTimeInvariant):
                          np.convolve(self.den, other.den)*sign)
 
         return TransferFunction(num, den, dt=dt)
+
+    @classmethod
+    def discretize(cls, sys_, sample_time, method='zoh'):
+        """
+        Convert a continuous system into a discrete system.
+
+        :param sys_: the system to be discretized
+        :type sys_: TransferFunction
+        :param sample_time: sample time
+        :type sample_time: numbers.Real
+        :param method: to pick up a discretization method
+        :type method: str
+        :return: the discrete system
+        :rtype: TransferFunction
+        """
+        if sample_time < 0:
+            raise ValueError
+        methods = {'matched': _matched, 'Tustin': _tustin}
+        f = methods[method]
+        num, den = f(sys_, sample_time)
+        return cls(num, den, dt=sample_time)
+
+
+def _zoh(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
+    raise NotImplementedError
+
+
+def _tustin(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
+    gs, *_ = _tf_to_symbol(sys_.num, sys_.den)
+    s, z = sym.symbols('s z')
+    tustin = (z - 1)/(z + 1)*2/sample_time
+    gz = gs.replace(s, tustin)
+    gz = sym.cancel(gz)
+    num, den = gz.as_numer_denom()
+    num = sym.Poly(num).coeffs()
+    den = sym.Poly(den).coeffs()
+    return num, den
+
+
+def _matched(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
+    poles = sys_.pole()
+    zeros = sys_.zero()
+    num = np.poly(np.exp(zeros*sample_time))
+    den = np.poly(np.exp(poles*sample_time))
+    nump = np.poly1d(num)
+    denp = np.poly1d(den)
+    ds = np.polyval(sys_.num, 0)/np.polyval(sys_.den, 0)
+    d1z = nump(1)/denp(1)
+    dz_gain = ds/d1z
+    return num*dz_gain, den
 
 
 def _get_dt(sys1, sys2):

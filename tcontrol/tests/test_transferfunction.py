@@ -50,6 +50,16 @@ class TestTransferFunction(TestCase):
         s = TransferFunction([1, 2], [1, 2, 1])
         self.assertEqual((s.zero() == np.roots([1, 2])).all(), True)
 
+    def test_discretize(self):
+        discretize = TransferFunction.discretize
+        # test Tustin
+        self.assertEqual(discretize(self.s1, 1, 'Tustin'), tf([3, 2, -1], [5, -6, 5], 1))
+
+        # test matched
+        d_sys = discretize(self.s1, 1, 'matched')
+        error = np.abs(d_sys.num - np.array([1.4545, -0.5351]))
+        self.assertTrue(np.all(np.less_equal(error, 1e-4)))
+
     def test_tf(self):
         self.assertEqual(tf([1], [1, 0]), TransferFunction([1], [1, 0]))
         self.assertEqual(tf(TransferFunction([1], [1, 0])), TransferFunction([1], [1, 0]))
