@@ -85,7 +85,11 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     :type init_cond: None | numbers.Real | np.ndarray
 
     :return: system output and time array
-    :rtype: tuple[np.ndarray, np.ndarray]
+    :rtype: Tuple[np.ndarray, np.ndarray]
+
+    :raises TypeError: when give wrong types of arguments
+    :raises ValueError: raised when t, input_signal or init_cond has a wrong shape
+    :raises NotImplementedError: when system is a MIMO system
 
     .. note:: This is internal api.
     """
@@ -120,7 +124,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
             raise TypeError("wrong type is given.")
     # MIMO system
     else:
-        raise NotImplemented("not support MIMO system right row")  # TODO: complete this
+        raise NotImplementedError("not support MIMO system right now")  # TODO: finish it
 
     if init_cond is None:
         init_cond = np.mat(np.zeros((d_sys_.A.shape[0], 1)))
