@@ -1,10 +1,10 @@
 from unittest import TestCase
 
-from tcontrol.transform_utility import c2d
+from tcontrol.discretization import c2d
 from tcontrol.transferfunction import tf
 
 
-class TestTransformUtility(TestCase):
+class TestDiscretization(TestCase):
     def setUp(self):
         self.s1 = tf([1, 1], [1, 0, 1])
 
