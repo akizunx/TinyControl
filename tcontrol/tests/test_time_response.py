@@ -1,6 +1,6 @@
-import tcontrol
-from matplotlib import pyplot as plt
 from unittest import TestCase
+
+import tcontrol
 import numpy as np
 
 
@@ -24,14 +24,14 @@ class TestTimeResponse(TestCase):
         y2, t2 = tcontrol.ramp(self.ss_, plot=False)
         r = np.abs(y2 - y1)
         r = np.max(r)
-        self.assertLessEqual(r, 1e-5, r)
+        self.assertLessEqual(r, 1e-5)
 
     def test_impulse(self):
         y1, t1 = tcontrol.impulse(self.tf_, plot=False)
         y2, t2 = tcontrol.impulse(self.ss_, plot=False)
         r = np.abs(y2 - y1)
         r = np.max(r)
-        self.assertLessEqual(r, 1e-5, r)
+        self.assertLessEqual(r, 1e-5)
 
     def test_any_input(self):
         t = np.linspace(0, 10, 1000)
@@ -40,4 +40,4 @@ class TestTimeResponse(TestCase):
         y2, t2 = tcontrol.any_input(self.ss_, t, u, plot=False)
         r = np.abs(y2 - y1)
         r = np.max(r)
-        self.assertLessEqual(r, 1e-5, r)
+        self.assertLessEqual(r, 1e-5)

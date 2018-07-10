@@ -3,7 +3,7 @@ import warnings
 import numbers
 
 from tcontrol.transferfunction import TransferFunction, _tf_to_symbol
-from tcontrol.statespace import StateSpace, continuous_to_discrete, tf2ss
+from tcontrol.statespace import StateSpace, tf2ss
 from tcontrol.plot_utility import _plot_response_curve
 import numpy as np
 import sympy as sym
@@ -70,51 +70,6 @@ def __ilaplace(expr):
     return ct
 
 
-def __any_input(sys_, t, input_signal='0'):
-    t_ = sym.Symbol('t')
-    output = __get_cs(sys_, input_signal)
-    output = __ilaplace(output)
-    output_func = sym.lambdify(t_, output, modules=['numpy'])
-    y = output_func(t)
-    return y, t
-
-
-def __step(sys_, t=None, *, plot=True):
-    if t is None:
-        t = np.linspace(0, 10, 1000)
-
-    y, _ = __any_input(sys_, t, 'step')
-
-    if plot:
-        _plot_response_curve(y, t, 'Step Response')
-
-    return y, t
-
-
-def __impulse(sys_, t=None, *, plot=True):
-    if t is None:
-        t = np.linspace(0, 10, 1000)
-
-    y, _ = __any_input(sys_, t, 'impulse')
-
-    if plot:
-        _plot_response_curve(y, t, 'Impulse Response')
-
-    return y, t
-
-
-def __ramp(sys_, t=None, *, plot=True):
-    if t is None:
-        t = np.linspace(0, 10, 1000)
-
-    y, _ = __any_input(sys_, t, 'ramp')
-
-    if plot:
-        _plot_response_curve(y, t, 'Ramp Response')
-
-    return y, t
-
-
 # convert system to state space then get result
 def _any_input(sys_, t, input_signal=0, init_cond=None):
     """
@@ -140,10 +95,10 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
         warnings.warn("sample time is bigger than 0.02s, which will lead to low accuracy",
                       stacklevel=3)
     if isinstance(sys_, TransferFunction):
-        d_sys_ = continuous_to_discrete(tf2ss(sys_), dt)
+        d_sys_ = StateSpace.discretize(tf2ss(sys_), dt)
     elif isinstance(sys_, StateSpace):
         if sys_.isctime():
-            d_sys_ = continuous_to_discrete(sys_, dt)
+            d_sys_ = StateSpace.discretize(sys_, dt)
         else:
             d_sys_ = sys_
     else:
