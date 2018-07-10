@@ -289,13 +289,17 @@ class StateSpace(LinearTimeInvariant):
 
         if method == 'zoh':
             AT = sys_.A*sample_time
-            G = np.eye(sys_.A.shape[0]) + sys_.A*sample_time
-            for k in range(2, 20):
-                G += AT ** k / math.factorial(k)
+            AT_K = [np.eye(sys_.A.shape[0]), AT]
+            for i in range(18):
+                AT_K.append(AT_K[-1] * AT)
+
+            G = 0
+            for k in range(20):
+                G += AT_K[k] / math.factorial(k)
 
             H = 0
             for k in range(20):
-                H += AT ** k / math.factorial(k + 1)
+                H += AT_K[k] / math.factorial(k + 1)
             H *= sample_time
             H = H * sys_.B
             return cls(G, H, sys_.C.copy(), sys_.D.copy(), dt=sample_time)
