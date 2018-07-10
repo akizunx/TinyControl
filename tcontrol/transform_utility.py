@@ -16,7 +16,7 @@ def c2d(sys_, sample_time, method='zoh'):
     :type sys_: TransferFunction | StateSpace
     :param sample_time: sample time
     :type sample_time: numbers.Real
-    :param method: method used in transformation
+    :param method: method used in transformation(default: zoh)
     :type method: str
     :return: a discrete system
     :rtype: TransferFunction | StateSpace
@@ -36,10 +36,10 @@ def c2d(sys_, sample_time, method='zoh'):
 
 
 @c2d.register(TransferFunction)
-def f(sys_, sample_time, method):
+def f(sys_, sample_time, method='zoh'):
     return TransferFunction.discretize(sys_, sample_time, method)
 
 
 @c2d.register(StateSpace)
-def f(sys_, sample_time, method):
+def f(sys_, sample_time, method='zoh'):
     return StateSpace.discretize(sys_, sample_time, method)
