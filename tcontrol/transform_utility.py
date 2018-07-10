@@ -2,7 +2,7 @@ from functools import singledispatch
 import numbers
 
 from .transferfunction import TransferFunction
-from .statespace import StateSpace, continuous_to_discrete
+from .statespace import StateSpace
 
 __all__ = ['c2d']
 
@@ -42,4 +42,4 @@ def f(sys_, sample_time, method):
 
 @c2d.register(StateSpace)
 def f(sys_, sample_time, method):
-    return continuous_to_discrete(sys_, sample_time)
+    return StateSpace.discretize(sys_, sample_time, method)

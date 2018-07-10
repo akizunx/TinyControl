@@ -134,3 +134,10 @@ class TestStateSpace(TestCase):
         self.assertTrue(np.array_equal(lyapunov(ss_), [[1.25, 0.25], [0.25, 0.25]]))
         system = tf2ss(tf([0.5], [1, 1, 0]))
         self.assertEqual(None, lyapunov(system))
+
+    def test_discretize(self):
+        d_sys = StateSpace.discretize(self.ss_, 1)
+        error = np.abs(d_sys.A - [[-0.2231, 0.3594], [-1.4376, -0.4028]])
+        self.assertTrue(np.all(np.less_equal(error, 1e-4)))
+        error = np.abs(d_sys.B - [[0.3057], [0.3593]])
+        self.assertTrue(np.all(np.less_equal(error, 1e-4)))

@@ -10,4 +10,6 @@ class TestTransformUtility(TestCase):
 
 
     def test_c2d(self):
-        self.skipTest('The c2d has been already tested in the test of transferfunction.')
+        msg = 'The c2d has been already tested in the test of transferfunction and' \
+              'statespace.'
+        self.skipTest(msg)
