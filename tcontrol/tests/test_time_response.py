@@ -41,3 +41,12 @@ class TestTimeResponse(TestCase):
         r = np.abs(y2 - y1)
         r = np.max(r)
         self.assertLessEqual(r, 1e-5)
+
+        # test discrete time situation
+        d_sys = tcontrol.c2d(tcontrol.tf([1], [1, 1]), 1, 'Tustin')
+        u = np.ones((10,), dtype=int)
+        y, t = tcontrol.any_input(d_sys, np.arange(0, 10, 1), u, plot=False)
+        error = np.abs(
+            y - [0.3333, 0.7778, 0.9259, 0.9753, 0.9918, 0.9973, 0.9991, 0.9997, 0.9999,
+                 1])
+        self.assertTrue(np.all(np.less_equal(error, 1e-4)))

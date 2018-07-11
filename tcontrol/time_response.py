@@ -1,6 +1,7 @@
-from functools import partial
+from functools import partial, singledispatch
 import warnings
 import numbers
+from typing import Union, Tuple, List
 
 from tcontrol.transferfunction import TransferFunction, _tf_to_symbol
 from tcontrol.statespace import StateSpace, tf2ss
@@ -78,7 +79,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     :param sys_: the system
     :type sys_: TransferFunction | StateSpace
     :param t: time
-    :type t: array_like
+    :type t: np.ndarray
     :param input_signal: input signal accepted by the system
     :type input_signal: numbers.Real | np.ndarray
     :param init_cond: initial condition of the system
@@ -95,34 +96,22 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     """
     # convert transfer function or continuous system to discrete system
     dt = t[1] - t[0]
-    if dt > 0.02:
-        warnings.warn("sample time is bigger than 0.02s, which will lead to low accuracy",
+    if dt > 0.02 and sys_.isctime():
+        warnings.warn("Large sample time will lead to low accuracy.",
                       stacklevel=3)
-    if isinstance(sys_, TransferFunction):
-        d_sys_ = StateSpace.discretize(tf2ss(sys_), dt)
-    elif isinstance(sys_, StateSpace):
-        if sys_.isctime():
-            d_sys_ = StateSpace.discretize(sys_, dt)
-        else:
-            d_sys_ = sys_
+
+    if sys_.isctime():
+        d_sys_ = _discretize_continuous_system(sys_, dt)
     else:
-        raise TypeError("wrong type of arg")
+        if _is_dt_validated(sys_, dt):
+            d_sys_ = tf2ss(sys_)
+        else:
+            raise ValueError('The step of time vector didn\'t match the sample time of '
+                             'the system.')
 
     # check the input_signal validity
-    # SISO system
     if d_sys_.issiso():
-        if isinstance(input_signal, np.ndarray):
-            if input_signal.shape == t.shape:
-                u = input_signal
-            else:
-                raise ValueError("input signal should have the same shape with t")
-        elif isinstance(input_signal, (list, tuple)):
-            u = np.array(input_signal)
-            if u.shape != t.shape:
-                raise ValueError("input signal should have the same shape with t")
-        else:
-            raise TypeError("wrong type is given.")
-    # MIMO system
+        u = _setup_control_signal(input_signal, t)
     else:
         raise NotImplementedError("not support MIMO system right now")  # TODO: finish it
 
@@ -141,6 +130,46 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     else:
         y = [np.asarray(_).reshape(-1) for _ in y]
     return np.array(y), t
+
+
+def _discretize_continuous_system(sys_: Union[TransferFunction, StateSpace],
+                                  dt: Union[int, float]) -> StateSpace:
+    if isinstance(sys_, StateSpace):
+        return StateSpace.discretize(sys_, dt)
+    elif isinstance(sys_, TransferFunction):
+        return StateSpace.discretize(tf2ss(sys_), dt)
+    else:
+        raise TypeError(f'type TransferFunction or StateSpace expected, got{type(sys_)}')
+
+
+def _is_dt_validated(sys_: Union[TransferFunction, StateSpace],
+                     dt: Union[int, float]) -> bool:
+    if abs(dt - sys_.dt) <= 1e-7:
+        return True
+    else:
+        return False
+
+
+@singledispatch
+def _setup_control_signal(input_signal, t):
+    raise TypeError("Wrong type is given.")
+
+
+@_setup_control_signal.register(np.ndarray)
+def f(input_signal, t):
+    if input_signal.shape == t.shape:
+        u = input_signal
+    else:
+        raise ValueError("The input signal should have the same shape with t.")
+    return u
+
+
+@_setup_control_signal.register(list)
+def f(input_signal, t):
+    u = np.array(input_signal)
+    if u.shape != t.shape:
+        raise ValueError("The input signal should have the same shape with t")
+    return u
 
 
 def _cal_x(G, H, n, x_0, u):
