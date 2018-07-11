@@ -1,7 +1,7 @@
 from unittest import TestCase
 import numpy as np
 from tcontrol.statespace import *
-from tcontrol.transferfunction import tf, ss2tf
+from tcontrol.transferfunction import *
 from ..exception import WrongNumberOfArguments
 
 
@@ -64,7 +64,7 @@ class TestStateSpace(TestCase):
                          [0.00397672393087681, 0.227709022266958],
                          [0.538296661406946, 0.149857420314700],
                          [0.132223192796285, 0.0885007994366726],
-                         [0.293713307787898,0.543698319397011],
+                         [0.293713307787898, 0.543698319397011],
                          [-0.117388364568095, 0.367561733989439]])
         ans_d = np.array([[-0.192541214208884, 0.523103714748680],
                           [0.475954939644619, 0.118861134193000]])
@@ -109,11 +109,25 @@ class TestStateSpace(TestCase):
         self.assertEqual(ss(self.tf_), self.ss_)
 
     def test_tf2ss(self):
+        # test continuous time
         ss_ = tf2ss(self.tf_)
         self.assertTrue(np.all(ss_.A == self.A))
         self.assertTrue(np.all(ss_.B == self.B))
         self.assertTrue(np.all(ss_.C == self.C))
         self.assertRaises(TypeError, tf2ss, ss_)
+
+        # test discrete time
+        sys_ = tf([1], [1, 1])
+        d_sys_ = TransferFunction.discretize(sys_, 1, 'Tustin')
+        d_ss_ = tf2ss(d_sys_)
+        error = np.abs(d_ss_.A - 1 / 3)
+        self.assertTrue(np.all(np.less_equal(error, 1e-6)))
+        error = np.abs(d_ss_.B - 1)
+        self.assertTrue(np.all(np.less_equal(error, 1e-6)))
+        error = np.abs(d_ss_.C - 4 / 9)
+        self.assertTrue(np.all(np.less_equal(error, 1e-6)))
+        error = np.abs(d_ss_.D - 1 / 3)
+        self.assertTrue(np.all(np.less_equal(error, 1e-6)))
 
     def test_ss2tf(self):
         self.assertEqual(ss2tf(self.ss_), self.tf_)

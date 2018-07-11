@@ -183,6 +183,10 @@ def _tustin(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarr
     num, den = gz.as_numer_denom()
     num = sym.Poly(num).coeffs()
     den = sym.Poly(den).coeffs()
+
+    # convert from sympy numbers to numpy float
+    num = np.asarray(num, dtype=np.float64)
+    den = np.asarray(den, dtype=np.float64)
     return num, den
 
 
