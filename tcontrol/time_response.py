@@ -209,7 +209,7 @@ def step(sys_, t=None, *, plot=True):
     u = np.ones(t.shape, dtype=int)
     y, t = _any_input(sys_, t, u)
     if plot:
-        _plot_response_curve(y, t, "step response")
+        _plot_response_curve(y, t, "step response", sys_.isctime())
     return y, t
 
 
@@ -230,7 +230,7 @@ def impulse(sys_, t=None, *, plot=True):
     y, t = _any_input(sys_, t, u)
     y[0] = y[1]
     if plot:
-        _plot_response_curve(y, t, "impulse response")
+        _plot_response_curve(y, t, "impulse response", sys_.isctime())
     return y, t
 
 
@@ -249,7 +249,7 @@ def ramp(sys_, t=None, *, plot=True):
     u = t
     y, t = _any_input(sys_, t, u)
     if plot:
-        _plot_response_curve(y, t, "impulse response")
+        _plot_response_curve(y, t, "impulse response", sys_.isctime())
     return y, t
 
 
@@ -273,5 +273,5 @@ def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
     """
     y, t = _any_input(sys_, t, input_signal, init_cond)
     if plot:
-        _plot_response_curve(y, t, "response")
+        _plot_response_curve(y, t, "response", sys_.isctime())
     return y, t

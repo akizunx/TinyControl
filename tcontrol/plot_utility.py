@@ -18,13 +18,16 @@ def figure(num=None, figsize=None, dpi=None, facecolor=None, edgecolor=None, fra
                        **kwargs)
 
 
-def _plot_response_curve(y, t, title):
+def _plot_response_curve(y, t, title, continuous=True):
     _plt.title(title)
     _plt.xlabel('t/s')
     _plt.ylabel('Amplitude')
     _plt.axvline(x=0, color='black')
     _plt.axhline(y=0, color='black')
-    _plt.plot(t, y)
+    if continuous:
+        _plt.plot(t, y)
+    else:
+        _plt.step(t, y)
     _plt.grid()
     _plt.show()
 
