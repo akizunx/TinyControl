@@ -201,7 +201,10 @@ def step(sys_, t=None, *, plot=True):
     .. seealso:: any_input
     """
     if t is None:
-        t = np.linspace(0, 10, 1000)
+        if sys_.isctime():
+            t = np.linspace(0, 10, 1000)
+        else:
+            t = np.arange(0, 10, sys_.dt)
 
     u = np.ones(t.shape, dtype=int)
     y, t = _any_input(sys_, t, u)
@@ -217,7 +220,10 @@ def impulse(sys_, t=None, *, plot=True):
     .. seealso:: any_input
     """
     if t is None:
-        t = np.linspace(0, 10, 1000)
+        if sys_.isctime():
+            t = np.linspace(0, 10, 1000)
+        else:
+            t = np.arange(0, 10, sys_.dt)
 
     u = np.zeros(t.shape)
     u[0] = len(t)/(t[-2] - t[0])  # It is a magic!!
@@ -235,7 +241,10 @@ def ramp(sys_, t=None, *, plot=True):
     .. seealso:: any_input
     """
     if t is None:
-        t = np.linspace(0, 10, 1000)
+        if sys_.isctime():
+            t = np.linspace(0, 10, 1000)
+        else:
+            t = np.arange(0, 10, sys_.dt)
 
     u = t
     y, t = _any_input(sys_, t, u)
