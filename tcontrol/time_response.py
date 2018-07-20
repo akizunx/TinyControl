@@ -207,6 +207,7 @@ def step(sys_, t=None, *, plot=True):
             t = np.arange(0, 10, sys_.dt)
 
     u = np.ones(t.shape, dtype=int)
+    u[0] = 0
     y, t = _any_input(sys_, t, u)
     if plot:
         _plot_response_curve(y, t, "step response", sys_.isctime())
