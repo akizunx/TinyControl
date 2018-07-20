@@ -1,6 +1,4 @@
-import nose
-import time
+import nose2
 
 if __name__ == "__main__":
-    result = nose.run()
-    time.sleep(1)
+    nose2.discover()
