@@ -161,11 +161,19 @@ class TransferFunction(LinearTimeInvariant):
         :type method: str
         :return: the discrete system
         :rtype: TransferFunction
+
+        :raises ValueError: When the discretization method is not in the method list.
         """
         if sample_time < 0:
             raise ValueError
-        methods = {'matched': _matched, 'Tustin': _tustin}
-        f = methods[method]
+        methods = {'matched': _matched, 'Tustin': _tustin, 'tustin': _tustin}
+        try:
+            f = methods[method]
+        except KeyError as e:
+            raise ValueError(
+                f'Unknown method for discretizing {cls}.\n The following methods are '
+                f'available, {methods.keys()}') from e
+
         num, den = f(sys_, sample_time)
         return cls(num, den, dt=sample_time)
 
