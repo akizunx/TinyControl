@@ -101,10 +101,10 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
                       stacklevel=3)
 
     if sys_.isctime():
-        d_sys_ = _discretize_continuous_system(sys_, dt)
+        d_sys_ = StateSpace.discretize(sys_, dt)
     else:
         if _is_dt_validated(sys_, dt):
-            d_sys_ = tf2ss(sys_)
+            d_sys_ = sys_
         else:
             raise ValueError('The step of time vector didn\'t match the sample time of '
                              'the system.')
@@ -130,16 +130,6 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     else:
         y = [np.asarray(_).reshape(-1) for _ in y]
     return np.array(y), t
-
-
-def _discretize_continuous_system(sys_: Union[TransferFunction, StateSpace],
-                                  dt: Union[int, float]) -> StateSpace:
-    if isinstance(sys_, StateSpace):
-        return StateSpace.discretize(sys_, dt)
-    elif isinstance(sys_, TransferFunction):
-        return StateSpace.discretize(tf2ss(sys_), dt)
-    else:
-        raise TypeError(f'type TransferFunction or StateSpace expected, got{type(sys_)}')
 
 
 def _is_dt_validated(sys_: Union[TransferFunction, StateSpace],
@@ -200,6 +190,9 @@ def step(sys_, t=None, *, plot=True):
 
     .. seealso:: any_input
     """
+    if isinstance(sys_, TransferFunction):
+        sys_ = tf2ss(sys_)
+
     if t is None:
         if sys_.isctime():
             t = np.linspace(0, 10, 1000)
@@ -220,6 +213,9 @@ def impulse(sys_, t=None, *, plot=True):
 
     .. seealso:: any_input
     """
+    if isinstance(sys_, TransferFunction):
+        sys_ = tf2ss(sys_)
+
     if t is None:
         if sys_.isctime():
             t = np.linspace(0, 10, 1000)
@@ -241,6 +237,9 @@ def ramp(sys_, t=None, *, plot=True):
 
     .. seealso:: any_input
     """
+    if isinstance(sys_, TransferFunction):
+        sys_ = tf2ss(sys_)
+
     if t is None:
         if sys_.isctime():
             t = np.linspace(0, 10, 1000)
@@ -272,6 +271,9 @@ def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
     :return: system output and time array
     :rtype: tuple[np.ndarray, np.ndarray]
     """
+    if isinstance(sys_, TransferFunction):
+        sys_ = tf2ss(sys_)
+
     y, t = _any_input(sys_, t, input_signal, init_cond)
     if plot:
         _plot_response_curve(y, t, "response", sys_.isctime())
