@@ -194,13 +194,9 @@ def step(sys_, t=None, *, plot=True):
         sys_ = tf2ss(sys_)
 
     if t is None:
-        if sys_.isctime():
-            t = np.linspace(0, 10, 1000)
-        else:
-            t = np.arange(0, 10, sys_.dt)
+        t = _setup_time_vector(sys_)
 
     u = np.ones(t.shape, dtype=int)
-    u[0] = 0
     y, t = _any_input(sys_, t, u)
     if plot:
         _plot_response_curve(y, t, "step response", sys_.isctime())
@@ -217,10 +213,7 @@ def impulse(sys_, t=None, *, plot=True):
         sys_ = tf2ss(sys_)
 
     if t is None:
-        if sys_.isctime():
-            t = np.linspace(0, 10, 1000)
-        else:
-            t = np.arange(0, 10, sys_.dt)
+        t = _setup_time_vector(sys_)
 
     u = np.zeros(t.shape)
     u[0] = len(t)/(t[-2] - t[0])  # It is a magic!!
@@ -241,10 +234,7 @@ def ramp(sys_, t=None, *, plot=True):
         sys_ = tf2ss(sys_)
 
     if t is None:
-        if sys_.isctime():
-            t = np.linspace(0, 10, 1000)
-        else:
-            t = np.arange(0, 10, sys_.dt)
+        t = _setup_time_vector(sys_)
 
     u = t
     y, t = _any_input(sys_, t, u)
@@ -278,3 +268,13 @@ def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
     if plot:
         _plot_response_curve(y, t, "response", sys_.isctime())
     return y, t
+
+
+def _setup_time_vector(sys_: StateSpace, n: int=1000):
+    eigvals = np.linalg.eigvals(sys_.A)
+    tc = 1 / np.min(np.abs(eigvals)) * 2
+
+    if sys_.isctime():
+        return np.linspace(0, 10 * tc, n)
+    else:
+        return np.arange(0, 10 * sys_.dt + 1, sys_.dt)
