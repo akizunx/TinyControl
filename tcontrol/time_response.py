@@ -203,7 +203,7 @@ def step(sys_, t=None, *, plot=True):
     return y, t
 
 
-def impulse(sys_, t=None, *, plot=True):
+def impulse(sys_, t=None, *, plot=True, **kwargs):
     """
     impulse response of the system
 
@@ -216,9 +216,14 @@ def impulse(sys_, t=None, *, plot=True):
         t = _setup_time_vector(sys_)
 
     u = np.zeros(t.shape)
-    u[0] = len(t)/(t[-2] - t[0])  # It is a magic!!
-    y, t = _any_input(sys_, t, u)
-    y[0] = y[1]
+    x0 = kwargs.get('x0')
+    K = kwargs.get('K', 1)
+    if not sys_.isctime():
+        u[0] = 1
+    else:
+        x0 = sys_.B * K if x0 is None else x0 + sys_.B * K
+
+    y, t = _any_input(sys_, t, u, x0)
     if plot:
         _plot_response_curve(y, t, "impulse response", sys_.isctime())
     return y, t
