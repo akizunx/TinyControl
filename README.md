@@ -26,7 +26,9 @@ __NOTICE__
 + [Numpy](http://www.numpy.org)
 + [Sympy](http://www.sympy.org)
 + [Matplotlib](https://matplotlib.org)
-+ [nose](https://github.com/nose-devs/nose) (optional for test)
++ [nose2](https://github.com/nose-devs/nose2) (optional for test)
++ [Sphinx](http://www.sphinx-doc.org) (optional for building docs)
++ [sphinx-rtd-theme](https://github.com/rtfd/sphinx_rtd_theme) (optional sphinx theme)
 
 ## Installation
     python -m setup.py install
