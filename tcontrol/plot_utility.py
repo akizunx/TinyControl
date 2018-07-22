@@ -27,7 +27,7 @@ def _plot_response_curve(y, t, title, continuous=True):
     if continuous:
         _plt.plot(t, y)
     else:
-        _plt.step(t, y)
+        _plt.step(t, y, where='post')
     _plt.grid()
     _plt.show()
 
