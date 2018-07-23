@@ -278,7 +278,8 @@ def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
 def _setup_time_vector(sys_: StateSpace, n: int=1000):
     eigvals = np.linalg.eigvals(sys_.A)
     tc = 1 / np.min(np.abs(eigvals)) * 2
-
+    if tc == np.inf:
+        tc = 1
     if sys_.isctime():
         return np.linspace(0, 10 * tc, n)
     else:
