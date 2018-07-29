@@ -58,6 +58,9 @@ class LinearTimeInvariant(object):
     def issiso(self):
         return self.outputs == 1 and self.inputs == 1
 
+    def is_gain(self):
+        raise NotImplementedError('This should be implemented by subclass')
+
 
 def isctime(sys_, strict=False):
     if sys_.dt is None:

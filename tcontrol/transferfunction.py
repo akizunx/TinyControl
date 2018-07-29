@@ -107,6 +107,10 @@ class TransferFunction(LinearTimeInvariant):
 
     __rmul__ = __mul__
 
+    @property
+    def is_gain(self):
+        return np.poly1d(self.num).order == np.poly1d(self.den).order == 0
+
     def pole(self):
         """
         Return poles of the system.

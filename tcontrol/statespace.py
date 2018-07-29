@@ -231,6 +231,10 @@ class StateSpace(LinearTimeInvariant):
         else:
             return False
 
+    @property
+    def is_gain(self):
+        return self.A == self.B == self.C == np.mat(0)
+
     def place(self, poles):
         """
         Configure system poles by using state feedback.
@@ -431,35 +435,41 @@ def tf2ss(sys_):
     :rtype: StateSpace
     """
     try:
-        num = np.poly1d(sys_.num)
-        den = np.poly1d(sys_.den)
+        nump = np.poly1d(sys_.num)
+        denp = np.poly1d(sys_.den)
     except AttributeError as e:
         raise TypeError("TransferFunction expected got {0}".format(type(sys_))) from e
     dt = sys_.dt
 
-    if den[den.order] != 1:
-        num /= den[den.order]
-        den /= den[den.order]
-    q, r = num/den
+    if denp[denp.order] != 1:
+        nump /= denp[denp.order]
+        denp /= denp[denp.order]
+    q, r = nump/denp
     num = r.coeffs
     bn = q.coeffs
-    den = den.coeffs
+    den = denp.coeffs
     D = np.matrix(bn)
 
-    # generate matrix A
-    A = np.zeros((1, den.shape[0] - 2))
-    A = np.concatenate((A, np.eye(den.shape[0] - 2)), axis=0)
-    den = den[1:]
-    den = np.mat(den[::-1])
-    A = np.concatenate((A, -den.T), axis=1)
+    if sys_.is_gain:
+        A = np.mat([[0]])
+        B = np.mat([[0]])
+        C = np.mat([[0]])
+        return StateSpace(A, B, C, D, dt=dt)
+    else:
+        # generate matrix A
+        A = np.zeros((1, den.shape[0] - 2))
+        A = np.concatenate((A, np.eye(den.shape[0] - 2)), axis=0)
+        den = den[1:]
+        den = np.mat(den[::-1])
+        A = np.concatenate((A, -den.T), axis=1)
 
-    B = np.zeros(A.shape[0])
-    B[A.shape[0] - num.shape[0]:] = num
-    B = np.mat(B[::-1]).T
-    c = np.zeros(A.shape[0])
-    c[-1] = 1
-    C = np.mat(c)
-    return StateSpace(A.T, C.T, B.T, D, dt=dt)
+        B = np.zeros(A.shape[0])
+        B[A.shape[0] - num.shape[0]:] = num
+        B = np.mat(B[::-1]).T
+        c = np.zeros(A.shape[0])
+        c[-1] = 1
+        C = np.mat(c)
+        return StateSpace(A.T, C.T, B.T, D, dt=dt)
 
 
 def continuous_to_discrete(sys_, sample_time):
