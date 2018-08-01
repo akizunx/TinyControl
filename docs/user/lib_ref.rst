@@ -1,10 +1,31 @@
 Library Reference
 =================
 
+.. automodule:: tcontrol
+
+LTI
+-----------------------
+
+.. currentmodule:: tcontrol.lti
+
+Class
+>>>>>
+
+.. autoclass:: LinearTimeInvariant
+   :members:
+   :private-members:
+
+Function
+>>>>>>>>
+
+.. autofunction:: isctime
+.. autofunction:: isdtime
+.. autofunction:: issiso
+
 Transfer Function Model
 -----------------------
 
-.. automodule:: transferfunction
+.. currentmodule:: tcontrol.transferfunction
 
 Class
 >>>>>
@@ -24,7 +45,7 @@ Function
 State Space Model
 -----------------
 
-.. automodule:: statespace
+.. currentmodule:: tcontrol.statespace
 
 Class
 >>>>>
@@ -46,7 +67,7 @@ Function
 Time Response
 -------------
 
-.. automodule:: time_response
+.. currentmodule:: tcontrol.time_response
 .. autofunction:: step
 .. autofunction:: impulse
 .. autofunction:: ramp
