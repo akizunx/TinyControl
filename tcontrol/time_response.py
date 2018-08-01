@@ -96,11 +96,11 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     """
     # convert transfer function or continuous system to discrete system
     dt = t[1] - t[0]
-    if dt > 0.02 and sys_.isctime():
+    if dt > 0.02 and sys_.is_ctime:
         warnings.warn("Large sample time will lead to low accuracy.",
                       stacklevel=3)
 
-    if sys_.isctime():
+    if sys_.is_ctime:
         d_sys_ = StateSpace.discretize(sys_, dt)
     else:
         if _is_dt_validated(sys_, dt):
@@ -110,7 +110,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
                              'the system.')
 
     # check the input_signal validity
-    if d_sys_.issiso():
+    if d_sys_.is_siso:
         u = _setup_control_signal(input_signal, t)
     else:
         raise NotImplementedError("not support MIMO system right now")  # TODO: finish it
@@ -125,7 +125,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     x = _cal_x(d_sys_.A, d_sys_.B, len(t[1:]), init_cond, u)
     y = _cal_y(d_sys_.C, d_sys_.D, len(x), x, u)
 
-    if sys_.issiso():
+    if sys_.is_siso:
         y = np.asarray(y).reshape(-1)
     else:
         y = [np.asarray(_).reshape(-1) for _ in y]
@@ -199,7 +199,7 @@ def step(sys_, t=None, *, plot=True):
     u = np.ones(t.shape, dtype=int)
     y, t = _any_input(sys_, t, u)
     if plot:
-        _plot_response_curve(y, t, "step response", sys_.isctime())
+        _plot_response_curve(y, t, "step response", sys_.is_ctime)
     return y, t
 
 
@@ -218,14 +218,14 @@ def impulse(sys_, t=None, *, plot=True, **kwargs):
     u = np.zeros(t.shape)
     x0 = kwargs.get('x0')
     K = kwargs.get('K', 1)
-    if not sys_.isctime():
+    if not sys_.is_ctime:
         u[0] = 1
     else:
         x0 = sys_.B * K if x0 is None else x0 + sys_.B * K
 
     y, t = _any_input(sys_, t, u, x0)
     if plot:
-        _plot_response_curve(y, t, "impulse response", sys_.isctime())
+        _plot_response_curve(y, t, "impulse response", sys_.is_ctime)
     return y, t
 
 
@@ -244,7 +244,7 @@ def ramp(sys_, t=None, *, plot=True):
     u = t
     y, t = _any_input(sys_, t, u)
     if plot:
-        _plot_response_curve(y, t, "impulse response", sys_.isctime())
+        _plot_response_curve(y, t, "impulse response", sys_.is_ctime)
     return y, t
 
 
@@ -271,7 +271,7 @@ def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
 
     y, t = _any_input(sys_, t, input_signal, init_cond)
     if plot:
-        _plot_response_curve(y, t, "response", sys_.isctime())
+        _plot_response_curve(y, t, "response", sys_.is_ctime)
     return y, t
 
 
@@ -280,7 +280,7 @@ def _setup_time_vector(sys_: StateSpace, n: int=1000):
     tc = 1 / np.min(np.abs(eigvals)) * 2
     if tc == np.inf:
         tc = 1
-    if sys_.isctime():
+    if sys_.is_ctime:
         return np.linspace(0, 10 * tc, n)
     else:
         return np.arange(0, 10 * sys_.dt + 1, sys_.dt)
