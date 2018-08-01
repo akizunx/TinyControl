@@ -33,31 +33,63 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 This module is modified from python-control.
 Reference: https://github.com/python-control/python-control
 """
-
+import warnings
 
 
 __all__ = ['LinearTimeInvariant']
 
 
 class LinearTimeInvariant(object):
+    """
+    This class is a parent class, which implements linear
+    time invariant system (LTI).
+
+    :param inputs: the number of input channels
+    :type inputs: int
+    :param outputs: the number of output channels
+    :type outputs: int
+    :param dt: sampling time. dt is None or 0 which means the system is a
+           continuous system. dt > 0 represents a discrete system. And dt < 0
+           is invalid.
+    :type dt: int | float
+    """
     def __init__(self, inputs=1, outputs=1, dt=None):
         self.inputs = inputs
         self.outputs = outputs
         self.dt = dt
 
     def isctime(self, strict=False):
+        warnings.warn('isctime method is deprecated, use is_ctime property instead',
+                      DeprecationWarning)
         if self.dt is None:
             return False if strict else True
         return self.dt == 0
 
     def isdtime(self, strict):
+        warnings.warn('isdtime method is deprecated, use is_dtime property instead',
+                      DeprecationWarning)
         if self.dt is None:
             return False if strict else True
         return self.dt > 0
 
     def issiso(self):
+        warnings.warn('issiso method is deprecated, use is_siso property instead',
+                      DeprecationWarning)
         return self.outputs == 1 and self.inputs == 1
 
+    @property
+    def is_ctime(self):
+        return self.dt is None or self.dt == 0
+
+    @property
+    def is_dtime(self):
+        return self.dt > 0
+
+    @property
+    def is_siso(self):
+        return self.outputs == 1 and self.inputs == 1
+
+    @property
     def is_gain(self):
         raise NotImplementedError('This should be implemented by subclass')
 
