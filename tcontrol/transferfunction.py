@@ -15,6 +15,13 @@ __all__ = ["TransferFunction", "tf", "zpk", "ss2tf"]
 class TransferFunction(LinearTimeInvariant):
     """
     a class implement the transfer function model
+
+    :param num: the numerator of transfer function
+    :type num: np.ndarray | list
+    :param den: the denominator of transfer function
+    :type den: np.ndarray | list
+    :param dt: sampling time
+    :type dt: int | float
     """
 
     def __init__(self, num, den, *, dt=None):
@@ -224,7 +231,7 @@ def _get_dt(sys1, sys2):
     :param sys2: the second system
     :type sys2: TransferFunction
     :return: sampling time
-    :rtype: numbers.Real
+    :rtype: int | float
     """
     if sys1.dt == sys2.dt or (sys1.dt is not None and sys2.dt is None):
         dt = sys1.dt
