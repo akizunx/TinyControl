@@ -1,5 +1,6 @@
 import warnings
 import math
+from itertools import chain
 
 from tcontrol.lti import LinearTimeInvariant
 from .exception import *
@@ -276,8 +277,8 @@ class StateSpace(LinearTimeInvariant):
         :param sys_: the system to be transformed
         :type sys_: StateSpace
 
-        :param sample_time: sample time of the discrete system.\
-        Time unit is second.
+        :param sample_time: sample time of the discrete system.
+               Time unit is second.
         :type sample_time: int | float
 
         :param method:
@@ -313,7 +314,9 @@ class StateSpace(LinearTimeInvariant):
     @staticmethod
     def lyapunov(sys_):
         """
-        Solve the equation A.T * X + X * A = -I
+        Solve the equation::
+            continuous system: A.T * X + X * A = -I
+            discrete system: A.T * X * A - X = -I
 
         Use sympy to generate a matrix like following one
         ::
@@ -338,10 +341,13 @@ class StateSpace(LinearTimeInvariant):
              for j in range(n)]
         P = sym.Matrix(p)
 
-        eq = sys_.A.T*P + P*sys_.A + eye
+        if sys_.is_ctime:
+            eq = sys_.A.T * P + P * sys_.A + eye
+        else:
+            eq = sys_.A.T * P * sys_.A - P + eye
 
-        p_set = sym.solve(eq)
-        if p_set == []:
+        p_set = sym.solve(eq, chain(*p))
+        if not p_set:
             return None
 
         P = P.evalf(subs=p_set)  # evaluate the matrix P
