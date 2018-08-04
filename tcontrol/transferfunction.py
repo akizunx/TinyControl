@@ -177,7 +177,8 @@ class TransferFunction(LinearTimeInvariant):
         """
         if sample_time < 0:
             raise ValueError
-        methods = {'matched': _matched, 'Tustin': _tustin, 'tustin': _tustin}
+        methods = {'matched': _matched, 'Tustin': _tustin, 'tustin': _tustin,
+                   'zoh': _zoh}
         try:
             f = methods[method]
         except KeyError as e:
@@ -191,6 +192,38 @@ class TransferFunction(LinearTimeInvariant):
 
 def _zoh(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
     raise NotImplementedError
+#     gs, *_ = _tf_to_symbol(sys_.num, sys_.den)
+#     s, z = sym.symbols('s z')
+#     t = sample_time
+#     z_table = {0: lambda x: 1, 1: lambda x: z / (z - sym.exp(-x * t)),
+#                2: lambda x: t * z * sym.exp(-x * t) / (z - sym.exp(-x * t))**2}
+#
+#     gs = gs / s
+#     gs = gs.apart(full=True).doit()
+#     fz = 0
+#     for i in gs.args:
+#         num, den = i.as_numer_denom()
+#         print(i, num, den)
+#         num = sym.expand(num)
+#         den = sym.expand(den)
+#         nump, denp = sym.Poly(num, s), sym.Poly(den, s)
+#         num_coeffs = nump.all_coeffs()[::-1]
+#         den_coeffs = denp.all_coeffs()[::-1]
+#         den_order = len(den_coeffs) - 1
+#         if den_coeffs[den_order] != 1:
+#             k = den_coeffs[den_order]
+#             num_coeffs = [i / k for i in num_coeffs]
+#             den_coeffs = [i / k for i in den_coeffs]
+#         fz += num_coeffs[0] * z_table[den_order](den_coeffs[0] ** (1 / den_order))
+#     fz = fz * (z - 1) / z
+#     fz = sym.ratsimp(fz)
+#     fz = fz.evalf(chop=True)
+#     num, den = fz.as_numer_denom()
+#     num = sym.Poly(num, z).all_coeffs()
+#     den = sym.Poly(den, z).all_coeffs()
+#     num = np.asarray(num, dtype=np.float64)
+#     den = np.asarray(den, dtype=np.float64)
+#     return num, den
 
 
 def _tustin(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
@@ -381,4 +414,4 @@ def ss2tf(sys_):
     a = np.append(a, 1)
     a = a[::-1]
     b = np.asarray(C_[-1]).reshape(-1)
-    return TransferFunction(b[::-1], a)
+    return TransferFunction(b[::-1], a, dt=sys_.dt)
