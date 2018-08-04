@@ -3,9 +3,10 @@ import warnings
 import numbers
 from typing import Union, Tuple, List
 
-from tcontrol.transferfunction import TransferFunction, _tf_to_symbol
-from tcontrol.statespace import StateSpace, tf2ss
-from tcontrol.plot_utility import _plot_response_curve
+from .transferfunction import TransferFunction, _tf_to_symbol
+from .statespace import StateSpace, tf2ss
+from .plot_utility import _plot_response_curve
+from .discretization import c2d
 import numpy as np
 import sympy as sym
 
@@ -101,7 +102,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
                       stacklevel=3)
 
     if sys_.is_ctime:
-        d_sys_ = StateSpace.discretize(sys_, dt)
+        d_sys_ = c2d(sys_, dt)
     else:
         if _is_dt_validated(sys_, dt):
             d_sys_ = sys_
