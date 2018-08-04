@@ -269,48 +269,6 @@ class StateSpace(LinearTimeInvariant):
         return cls(sys_.A.T.copy(), sys_.C.T.copy(), sys_.B.T.copy(), sys_.D.T.copy(),
                    dt=sys_.dt)
 
-    @classmethod
-    def discretize(cls, sys_, sample_time, method='zoh'):
-        """
-        Convert a continuous system to  a discrete system.
-
-        :param sys_: the system to be transformed
-        :type sys_: StateSpace
-
-        :param sample_time: sample time of the discrete system.
-               Time unit is second.
-        :type sample_time: int | float
-
-        :param method:
-        :type method: str
-
-        :return: a discrete system
-        :rtype: StateSpace
-        """
-        if not sys_.isctime():
-            warnings.warn("the system is already a discrete system, no need to convert",
-                          stacklevel=2)
-            return sys_
-
-        if method == 'zoh':
-            AT = sys_.A*sample_time
-            AT_K = [np.eye(sys_.A.shape[0]), AT]
-            for i in range(18):
-                AT_K.append(AT_K[-1] * AT)
-
-            G = 0
-            for k in range(20):
-                G += AT_K[k] / math.factorial(k)
-
-            H = 0
-            for k in range(20):
-                H += AT_K[k] / math.factorial(k + 1)
-            H *= sample_time
-            H = H * sys_.B
-            return cls(G, H, sys_.C.copy(), sys_.D.copy(), dt=sample_time)
-        else:
-            raise NotImplementedError
-
     @staticmethod
     def lyapunov(sys_):
         """

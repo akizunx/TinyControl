@@ -40,10 +40,10 @@ class TransferFunction(LinearTimeInvariant):
         len1 = len(cs)
         len2 = len(rs)
         if self.dt is None:
-            return "{0}{1}\n{2}\n{3}\n".format(' '*((len2 - len1)//2 + 1), cs, '-'*len2,
+            return "{0}{1}\n{2}\n{3}\n".format(' ' * ((len2 - len1) // 2 + 1), cs, '-' * len2,
                                                rs)
         else:
-            r = "{0}{1}\n{2}\n{3}\n".format(' '*((len2 - len1)//2 + 1), cs, '-'*len2, rs)
+            r = "{0}{1}\n{2}\n{3}\n".format(' ' * ((len2 - len1) // 2 + 1), cs, '-' * len2, rs)
             r = r.replace('s', 'z')
             return r + f'sample time:{self.dt}s'
 
@@ -60,7 +60,7 @@ class TransferFunction(LinearTimeInvariant):
                flag
 
     def __neg__(self):
-        num = -1*self.num
+        num = -1 * self.num
         return TransferFunction(num, self.den, dt=self.dt)
 
     def __add__(self, other):
@@ -101,7 +101,7 @@ class TransferFunction(LinearTimeInvariant):
         :rtype: TransferFunction
         """
         if isinstance(other, numbers.Real):
-            return TransferFunction(self.num*other, self.den, dt=self.dt)
+            return TransferFunction(self.num * other, self.den, dt=self.dt)
 
         num = np.convolve(self.num, other.num)
         den = np.convolve(self.den, other.den)
@@ -159,36 +159,6 @@ class TransferFunction(LinearTimeInvariant):
 
         return TransferFunction(num, den, dt=dt)
 
-    @classmethod
-    def discretize(cls, sys_, sample_time, method='zoh'):
-        """
-        Convert a continuous system into a discrete system.
-
-        :param sys_: the system to be discretized
-        :type sys_: TransferFunction
-        :param sample_time: sample time
-        :type sample_time: numbers.Real
-        :param method: to pick up a discretization method
-        :type method: str
-        :return: the discrete system
-        :rtype: TransferFunction
-
-        :raises ValueError: When the discretization method is not in the method list.
-        """
-        if sample_time < 0:
-            raise ValueError
-        methods = {'matched': _matched, 'Tustin': _tustin, 'tustin': _tustin,
-                   'zoh': _zoh}
-        try:
-            f = methods[method]
-        except KeyError as e:
-            raise ValueError(
-                f'Unknown method for discretizing {cls}.\n The following methods are '
-                f'available, {methods.keys()}') from e
-
-        num, den = f(sys_, sample_time)
-        return cls(num, den, dt=sample_time)
-
 
 def _zoh(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
     raise NotImplementedError
@@ -226,35 +196,6 @@ def _zoh(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray,
 #     return num, den
 
 
-def _tustin(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
-    gs, *_ = _tf_to_symbol(sys_.num, sys_.den)
-    s, z = sym.symbols('s z')
-    tustin = (z - 1)/(z + 1)*2/sample_time
-    gz = gs.replace(s, tustin)
-    gz = sym.cancel(gz)
-    num, den = gz.as_numer_denom()
-    num = sym.Poly(num).coeffs()
-    den = sym.Poly(den).coeffs()
-
-    # convert from sympy numbers to numpy float
-    num = np.asarray(num, dtype=np.float64)
-    den = np.asarray(den, dtype=np.float64)
-    return num, den
-
-
-def _matched(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
-    poles = sys_.pole()
-    zeros = sys_.zero()
-    num = np.poly(np.exp(zeros*sample_time))
-    den = np.poly(np.exp(poles*sample_time))
-    nump = np.poly1d(num)
-    denp = np.poly1d(den)
-    ds = np.polyval(sys_.num, 0)/np.polyval(sys_.den, 0)
-    d1z = nump(1)/denp(1)
-    dz_gain = ds/d1z
-    return num*dz_gain, den
-
-
 def _get_dt(sys1, sys2):
     """
     Determine the sampling time of the new system.
@@ -281,7 +222,7 @@ def _tf_to_symbol(num, den):
     s = sym.Symbol('s')
     cs = sym.Poly.from_list(num, gens=s)
     rs = sym.Poly.from_list(den, gens=s)
-    gs = cs/rs
+    gs = cs / rs
     return gs, cs, rs
 
 
@@ -408,9 +349,9 @@ def ss2tf(sys_):
     :rtype: TransferFunction
     """
     T = sys_.to_controllable_form()
-    A_ = T.I*sys_.A*T
-    C_ = sys_.C*T
-    a = np.asarray(A_[-1]).reshape(-1)*(-1)
+    A_ = T.I * sys_.A * T
+    C_ = sys_.C * T
+    a = np.asarray(A_[-1]).reshape(-1) * (-1)
     a = np.append(a, 1)
     a = a[::-1]
     b = np.asarray(C_[-1]).reshape(-1)
