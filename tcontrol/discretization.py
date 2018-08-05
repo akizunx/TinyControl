@@ -50,6 +50,10 @@ def _matched(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndar
     zeros = sys_.zero()
     num = np.poly(np.exp(zeros * sample_time))
     den = np.poly(np.exp(poles * sample_time))
+    root_number_delta = np.roots(den).shape[0] - np.roots(num).shape[0]
+    while root_number_delta > 0:
+        num = np.polymul(num, np.array([1, 1]))
+        root_number_delta -= 1
     nump = np.poly1d(num)
     denp = np.poly1d(den)
     ds = np.polyval(sys_.num, 0) / np.polyval(sys_.den, 0)
