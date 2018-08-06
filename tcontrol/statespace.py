@@ -7,7 +7,7 @@ from .exception import *
 import numpy as np
 import sympy as sym
 
-__all__ = ["StateSpace", "ss", "tf2ss", "continuous_to_discrete", "lyapunov"]
+__all__ = ["StateSpace", "ss", "tf2ss", "lyapunov"]
 
 
 class StateSpace(LinearTimeInvariant):
@@ -434,32 +434,6 @@ def tf2ss(sys_):
         c[-1] = 1
         C = np.mat(c)
         return StateSpace(A.T, C.T, B.T, D, dt=dt)
-
-
-def continuous_to_discrete(sys_, sample_time):
-    """
-    Convert continuous system to discrete system.
-
-    :param sys_: continuous system
-    :type sys_: StateSpace
-
-    :param sample_time: sample time of the discrete system.\
-    Time unit is second.
-    :type sample_time: int | float
-
-    :return: discrete system
-    :rtype: StateSpace
-    """
-    warnings.warn('continous_to_discrete is deprecated, use c2d instead',
-                  DeprecationWarning)
-    if sys_.isctime():
-        G = sample_time*sys_.A + np.eye(sys_.A.shape[0])
-        H = sample_time*sys_.B
-        return StateSpace(G, H, sys_.C.copy(), sys_.D.copy(), dt=sample_time)
-    else:
-        warnings.warn("the system is already a discrete system, no need to convert",
-                      stacklevel=2)
-        return sys_
 
 
 def _convert_to_ss(obj, **kwargs):

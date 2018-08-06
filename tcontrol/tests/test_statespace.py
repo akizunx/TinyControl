@@ -133,14 +133,6 @@ class TestStateSpace(TestCase):
     def test_ss2tf(self):
         self.assertEqual(ss2tf(self.ss_), self.tf_)
 
-    def test_continuous_to_discrete(self):
-        A = np.array([[0, 1], [0, -2]])
-        B = np.array([[0], [1]])
-        sys_ = StateSpace(A, B, self.C, self.D)
-        d_sys_ = continuous_to_discrete(sys_, 0.05)
-        continuous_to_discrete(d_sys_, 0.01)
-        self.assertWarns(UserWarning, continuous_to_discrete, d_sys_, 0.01)
-
     def test_lyapunov(self):
         A = [[0, 1], [-2, -3]]
         B = [[0], [1]]
