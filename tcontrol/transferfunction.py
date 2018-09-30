@@ -1,6 +1,5 @@
 import numbers
 from collections import Iterable
-from typing import Tuple
 
 from .lti import LinearTimeInvariant
 from .exception import *

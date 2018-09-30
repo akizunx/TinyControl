@@ -1,5 +1,3 @@
-import warnings
-import math
 from itertools import chain
 
 from tcontrol.lti import LinearTimeInvariant

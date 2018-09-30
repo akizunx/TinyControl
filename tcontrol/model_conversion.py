@@ -1,6 +1,5 @@
 from .transferfunction import TransferFunction
 from .statespace import StateSpace
-from .exception import *
 
 import numpy as np
 

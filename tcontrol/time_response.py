@@ -1,7 +1,7 @@
 from functools import partial, singledispatch
 import warnings
 import numbers
-from typing import Union, Tuple, List
+from typing import Union, Tuple
 
 from .transferfunction import TransferFunction, _tf_to_symbol
 from .statespace import StateSpace
