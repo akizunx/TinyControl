@@ -3,10 +3,11 @@ import numbers
 from typing import Tuple
 import math
 
-from .transferfunction import TransferFunction, ss2tf, _tf_to_symbol
-from .statespace import StateSpace, tf2ss
+from .transferfunction import TransferFunction
+from .statespace import StateSpace
+from .exception import WrongSampleTime, UnknownDiscretizationMethod
+from .model_conversion import *
 import numpy as np
-import sympy as sym
 
 __all__ = ['c2d']
 
@@ -29,20 +30,16 @@ def _zoh(sys_: StateSpace, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
     return G, H, sys_.C.copy(), sys_.D.copy()
 
 
-def _tustin(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
-    gs, *_ = _tf_to_symbol(sys_.num, sys_.den)
-    s, z = sym.symbols('s z')
-    tustin = (z - 1) / (z + 1) * 2 / sample_time
-    gz = gs.replace(s, tustin)
-    gz = sym.cancel(gz)
-    num, den = gz.as_numer_denom()
-    num = sym.Poly(num, z).all_coeffs()
-    den = sym.Poly(den, z).all_coeffs()
-
-    # convert from sympy numbers to numpy float
-    num = np.asarray(num, dtype=np.float64)
-    den = np.asarray(den, dtype=np.float64)
-    return num, den
+def _tustin(sys_: StateSpace, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
+    alpha = 2 / sample_time
+    eye = np.eye(sys_.A.shape[0])
+    P = eye - 1 / alpha * sys_.A
+    Q = eye + 1 / alpha * sys_.A
+    A = P.I * Q
+    B = P.I * sys_.B
+    C = 2 / alpha * sys_.C * P.I
+    D = sys_.D + sys_.C * B / alpha
+    return A, B, C, D
 
 
 def _matched(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
@@ -63,7 +60,7 @@ def _matched(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndar
 
 
 _methods = {'matched': _matched, 'Tustin': _tustin, 'tustin': _tustin,
-            'zoh': _zoh}
+            'bilinear': _tustin, 'zoh': _zoh}
 
 
 @singledispatch
@@ -95,21 +92,32 @@ def c2d(sys_, sample_time, method='zoh'):
 
 
 @c2d.register(TransferFunction)
-def f(sys_, sample_time, method='zoh'):
-    if method == 'zoh':
-        sys_ = tf2ss(sys_)
-    f = _methods[method]
-    r = f(sys_, sample_time)
-    if method == 'zoh':
-        A, B, C, D = r
+def fn(sys_, sample_time, method='zoh'):
+    if sample_time <= 0:
+        raise WrongSampleTime(f'The sample time must be larger than 0. got {sample_time}')
+
+    try:
+        f = _methods[method]
+    except KeyError as e:
+        raise UnknownDiscretizationMethod from e
+
+    if method != 'matched':
+        A, B, C, D = f(tf2ss(sys_), sample_time)
         return ss2tf(StateSpace(A, B, C, D, dt=sample_time))
     else:
-        num, den = r
+        num, den = f(sys_, sample_time)
         return TransferFunction(num, den, dt=sample_time)
 
 
 @c2d.register(StateSpace)
-def f(sys_, sample_time, method='zoh'):
-    f = _methods[method]
+def fn(sys_, sample_time, method='zoh'):
+    if sample_time <= 0:
+        raise WrongSampleTime(f'The sample time must be larger than 0. got {sample_time}')
+
+    try:
+        f = _methods[method]
+    except KeyError as e:
+        raise UnknownDiscretizationMethod from e
+
     A, B, C, D = f(sys_, sample_time)
     return StateSpace(A, B, C, D, dt=sample_time)
