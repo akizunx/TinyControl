@@ -9,3 +9,4 @@ from . import plot_utility as plot
 from .statespace import *
 from .exception import *
 from .discretization import *
+from .model_conversion import *

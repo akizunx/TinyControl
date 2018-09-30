@@ -3,6 +3,7 @@ from unittest import TestCase
 import numpy as np
 from tcontrol.statespace import *
 from tcontrol.transferfunction import *
+from ..model_conversion import *
 from ..exception import WrongNumberOfArguments
 from ..discretization import c2d
 

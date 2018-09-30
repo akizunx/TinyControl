@@ -4,9 +4,10 @@ import numbers
 from typing import Union, Tuple, List
 
 from .transferfunction import TransferFunction, _tf_to_symbol
-from .statespace import StateSpace, tf2ss
+from .statespace import StateSpace
 from .plot_utility import _plot_response_curve
 from .discretization import c2d
+from .model_conversion import tf2ss
 import numpy as np
 import sympy as sym
 

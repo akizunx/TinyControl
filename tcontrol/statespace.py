@@ -7,7 +7,7 @@ from .exception import *
 import numpy as np
 import sympy as sym
 
-__all__ = ["StateSpace", "ss", "tf2ss", "lyapunov"]
+__all__ = ["StateSpace", "ss", "lyapunov"]
 
 
 class StateSpace(LinearTimeInvariant):
@@ -372,71 +372,26 @@ def ss(*args, **kwargs):
     :return: the state space of the system
     :rtype: StateSpace
     """
+    from tcontrol.model_conversion import tf2ss
     length = len(args)
     if length == 1:
-        _sys = args[0]
+        sys_ = args[0]
         try:
-            A, B, C, D = _sys.A.copy(), _sys.B.copy(), _sys.C.copy(), _sys.D.copy()
+            A, B, C, D = sys_.A.copy(), sys_.B.copy(), sys_.C.copy(), sys_.D.copy()
+            dt = sys_.dt
         except AttributeError:
-            return tf2ss(_sys)
+            return tf2ss(sys_)
     elif length == 4:
         A, B, C, D = args
+        dt = kwargs.get('dt')
     else:
         raise WrongNumberOfArguments("1 or 4 args expected got {0}".format(length))
-    dt = kwargs.get('dt')
 
     return StateSpace(A, B, C, D, dt=dt)
 
 
-def tf2ss(sys_):
-    """
-    Convert transfer function model to state space model.
-
-    :param sys_: the system
-    :type sys_: TransferFunction
-
-    :return: corresponded transfer function model
-    :rtype: StateSpace
-    """
-    try:
-        nump = np.poly1d(sys_.num)
-        denp = np.poly1d(sys_.den)
-    except AttributeError as e:
-        raise TypeError("TransferFunction expected got {0}".format(type(sys_))) from e
-    dt = sys_.dt
-
-    if denp[denp.order] != 1:
-        nump /= denp[denp.order]
-        denp /= denp[denp.order]
-    q, r = nump/denp
-    num = r.coeffs
-    bn = q.coeffs
-    den = denp.coeffs
-    D = np.matrix(bn)
-
-    if sys_.is_gain:
-        A = np.mat([[0]])
-        B = np.mat([[0]])
-        C = np.mat([[0]])
-        return StateSpace(A, B, C, D, dt=dt)
-    else:
-        # generate matrix A
-        A = np.zeros((1, den.shape[0] - 2))
-        A = np.concatenate((A, np.eye(den.shape[0] - 2)), axis=0)
-        den = den[1:]
-        den = np.mat(den[::-1])
-        A = np.concatenate((A, -den.T), axis=1)
-
-        B = np.zeros(A.shape[0])
-        B[A.shape[0] - num.shape[0]:] = num
-        B = np.mat(B[::-1]).T
-        c = np.zeros(A.shape[0])
-        c[-1] = 1
-        C = np.mat(c)
-        return StateSpace(A.T, C.T, B.T, D, dt=dt)
-
-
 def _convert_to_ss(obj, **kwargs):
+    from tcontrol.model_conversion import tf2ss
     if isinstance(obj, (float, int)):
         inputs = kwargs.get("inputs", 1)
         outputs = kwargs.get("outputs", 1)

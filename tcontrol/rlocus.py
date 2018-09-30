@@ -1,7 +1,7 @@
-from tcontrol.transferfunction import ss2tf
 from tcontrol.statespace import StateSpace
 from tcontrol.pzmap import pzmap
 from tcontrol.plot_utility import AnnotatedPoint, AttachedCursor
+from .model_conversion import *
 import numpy as np
 from matplotlib import pyplot as plt
 
