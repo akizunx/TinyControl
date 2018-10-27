@@ -24,6 +24,7 @@ __NOTICE__
 ## Dependency
 + [Python 3](https://www.python.org)
 + [Numpy](http://www.numpy.org)
++ [Scipy](https://scipy.org/)
 + [Sympy](http://www.sympy.org)
 + [Matplotlib](https://matplotlib.org)
 + [nose2](https://github.com/nose-devs/nose2) (optional for test)
