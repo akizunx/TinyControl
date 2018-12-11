@@ -28,7 +28,7 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
     :return: roots of the den and kvect
     :rtype: tuple(np.ndarray, np.ndarray)
     """
-    if not sys_.issiso():
+    if not sys_.is_siso:
         raise NotImplementedError('rlocus is only for TransferFunction now.')
     if isinstance(sys_, StateSpace):
         system = ss2tf(sys_)
@@ -40,7 +40,7 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
         denp = np.poly1d(system.den)
 
         d = _cal_multi_roots(nump, denp)
-        k = -denp(d)/nump(d)
+        k = -denp(d) / nump(d)
         k = k[np.where(k >= 0)]
 
         if k.dtype == np.complex:
@@ -50,6 +50,7 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
         kvect = _setup_kvect(k)
 
     roots = _cal_roots(system, kvect)
+    roots = _sort_roots(roots)
 
     if plot:
         fig, ax = plt.subplots()
@@ -84,20 +85,35 @@ def rlocus(sys_, kvect=None, *, plot=True, **kwargs):
 def _cal_roots(sys_, kvect):
     nump = np.poly1d(sys_.num)
     denp = np.poly1d(sys_.den)
-    p = denp + kvect[0]*nump
+    p = denp + kvect[0] * nump
     order = p.order
     roots = np.zeros((len(kvect), order), dtype=np.complex)
     for i, k in enumerate(kvect):
-        p_ = denp + k*nump
-        r = p_.roots
-        r1 = r[r.imag == 0]
-        r2 = r[r.imag != 0]
-        roots[i] = np.append(r1, r2)
-    return roots.T
+        p_ = denp + k * nump
+        roots[i] = p_.roots
+    return roots
+
+
+def _sort_roots(roots):
+    """
+    This is modified from _RLSortRoots in python-control.
+    Reference: https://github.com/python-control/python-control
+    """
+    sorted_roots = np.zeros_like(roots)
+    sorted_roots[0] = roots[0]
+    pre_row = roots[0]
+    for i, row in enumerate(roots[1:, :], 1):
+        available = list(range(pre_row.shape[0]))
+        for element in row:
+            distance = np.abs(element - pre_row[available])
+            min_index = available.pop(distance.argmin())
+            sorted_roots[i, min_index] = element
+        pre_row = sorted_roots[i, :]
+    return sorted_roots.T
 
 
 def _cal_multi_roots(nump, denp):
-    p = denp*np.polyder(nump) - np.polyder(denp)*nump
+    p = denp * np.polyder(nump) - np.polyder(denp) * nump
     return p.roots
 
 
@@ -106,7 +122,7 @@ def _setup_kvect(k):
         kvect = np.linspace(0, k[0], 50)
         for i in range(1, len(k)):
             kvect = np.append(kvect, np.linspace(k[i - 1], k[i], 50))
-        kvect = np.append(kvect, np.linspace(k[-1], k[-1]*50, 100))
+        kvect = np.append(kvect, np.linspace(k[-1], k[-1] * 50, 100))
         if kvect[-1] < 10:
             kvect = np.append(kvect, np.linspace(kvect[-1], kvect[-1] + 10, 10))
     else:
@@ -153,7 +169,7 @@ class RlocusAnnotatedPoint(AnnotatedPoint):
         s = complex(event.xdata, event.ydata)
         num = np.abs(self.sys_.pole() - s)
         den = np.abs(self.sys_.zero() - s)
-        k = np.prod(num)/np.prod(den)
+        k = np.prod(num) / np.prod(den)
 
         if s.imag >= 0:
             text_str = "$K={0:.5f}$\n$s={1:.5f}+{2:.5f}j$".format(k, s.real, s.imag)
