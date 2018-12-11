@@ -2,6 +2,10 @@
 TinyControl is a python lib for automatic control system analysis,
 but now only a few features have been implemented.
 
+__IMPORTANT__ 
+
+This project is quite __UNSTABLE__, __Do Not Use in Any Serious Work!__
+
 ## Features
 + Support transfer function and state space models.
 + Time response
