@@ -40,7 +40,6 @@ Function
 
 .. autofunction:: tf
 .. autofunction:: zpk
-.. autofunction:: ss2tf
 
 State Space Model
 -----------------
@@ -59,10 +58,15 @@ Function
 >>>>>>>>
 
 .. autofunction:: ss
-.. autofunction:: tf2ss
-.. autofunction:: continuous_to_discrete
 .. autofunction:: lyapunov
 .. autofunction:: place
+
+Model Conversion
+----------------
+
+.. py:currentmodule:: tcontrol.model_conversion
+.. autofunction:: tf2ss
+.. autofunction:: ss2tf
 
 Time Response
 -------------
@@ -72,3 +76,16 @@ Time Response
 .. autofunction:: impulse
 .. autofunction:: ramp
 .. autofunction:: any_input
+
+Frequency Response
+------------------
+
+.. py:currentmodule:: tcontrol.frequency
+.. autofunction:: nyquist
+.. autofunction:: bode
+
+Discretization
+--------------
+
+.. py:currentmodule:: tcontrol.discretization
+.. autofunction:: c2d
