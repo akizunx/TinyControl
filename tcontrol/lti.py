@@ -83,7 +83,7 @@ class LinearTimeInvariant(object):
 
     @property
     def is_dtime(self):
-        return self.dt > 0
+        return self.dt is not None and self.dt > 0
 
     @property
     def is_siso(self):

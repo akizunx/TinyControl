@@ -36,22 +36,21 @@ def pzmap(sys_, title='pole-zero map', *, plot=True):
     pole = sys_.pole()
 
     if plot:
-        if sys_.isdtime(False):
+        if sys_.is_dtime:
             x = np.linspace(-1, 1, 100)
             y = np.sqrt(1 - x**2)
             plt.plot(x, y, '--', color='#929591')
             plt.plot(x, -y, '--',color='#929591')
 
-        l1 = None
-        l2 = None
         if zero.shape[0]:
             l1 = plt.scatter(np.real(zero), np.imag(zero), s=30, marker='o',
                              color='#069af3')
+            plt.legend([l1], ['zero'])
         if pole.shape[0]:
             l2 = plt.scatter(np.real(pole), np.imag(pole), s=30, marker='x',
                              color='#fdaa48')
+            plt.legend([l2], ['pole'])
 
-        plt.legend([l1, l2], ["zero", "pole"])
         plt.grid()
         plt.axvline(x=0, color='black')
         plt.axhline(y=0, color='black')
