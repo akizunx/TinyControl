@@ -9,3 +9,4 @@ class TestFrequency(TestCase):
 
     def test_bode(self):
         frequency.bode(tc.zpk([], [0, -1, -2], 2))
+        frequency.bode(tc.tf([1], [1, 1]))

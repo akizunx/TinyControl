@@ -26,12 +26,12 @@ def nyquist(sys_, omega=None, *, plot=True):
 
     if omega is None:
         omega = np.linspace(0, 100, 10000)
-    omega = 1j*omega
+    omega = 1j * omega
 
     num = np.poly1d(sys_.num)
     den = np.poly1d(sys_.den)
 
-    result = num(omega)/den(omega)
+    result = num(omega) / den(omega)
 
     if plot:
         plt.axvline(x=0, color='black')
@@ -39,7 +39,7 @@ def nyquist(sys_, omega=None, *, plot=True):
         plt.plot(result.real, result.imag, '-', color='#069af3')
         plt.plot(result.real, -result.imag, '--', color='#fdaa48')
 
-        arrow_pos = int(math.log(result.shape[0]))*2 + 1
+        arrow_pos = int(math.log(result.shape[0])) * 2 + 1
         x1, x2 = np.real(result[arrow_pos]), np.real(result[arrow_pos + 1])
         y1, y2 = np.imag(result[arrow_pos]), np.imag(result[arrow_pos + 1])
         dx = x2 - x1
@@ -77,12 +77,12 @@ def bode(sys_, omega=None, *, plot=True):
 
     if omega is None:
         omega = np.logspace(-2, 2)
-    omega = omega*1j
+    omega = omega * 1j
 
     num = np.poly1d(sys_.num)
     den = np.poly1d(sys_.den)
 
-    A = 20*np.log(np.abs(num(omega)/den(omega)))
+    A = 20 * np.log10(np.abs(num(omega) / den(omega)))
 
     deg = np.zeros(omega.shape)
     for i in sys_.zero():
@@ -101,7 +101,7 @@ def bode(sys_, omega=None, *, plot=True):
         plt.axhline(y=0, color='black')
         plt.xscale('log')
 
-        y_range = [i*20 for i in range(int(min(A))//20 - 1, int(max(A))//20 + 2)]
+        y_range = [i * 20 for i in range(int(min(A)) // 20 - 1, int(max(A)) // 20 + 2)]
         plt.yticks(y_range)
 
         plt.plot(omega.imag, A, '-', color='#069af3')
@@ -113,7 +113,7 @@ def bode(sys_, omega=None, *, plot=True):
         plt.axhline(y=0, color='black')
         plt.xscale('log')
 
-        y_range = [i*45 for i in range(int(min(A))//45 - 1, int(max(A))//45 + 2)]
+        y_range = [i * 45 for i in range(int(min(A)) // 45 - 1, int(max(A)) // 45 + 2)]
         plt.yticks(y_range)
 
         plt.plot(omega.imag, phi, '-', color='#069af3')
