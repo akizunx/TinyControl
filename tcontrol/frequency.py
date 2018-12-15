@@ -99,12 +99,12 @@ def bode(sys_, omega=None, *, plot=True):
         ax1 = plt.subplot(2, 1, 1)
         plt.axvline(x=0, color='black')
         plt.axhline(y=0, color='black')
-        plt.xscale('log')
 
         y_range = [i * 20 for i in range(int(min(A)) // 20 - 1, int(max(A)) // 20 + 2)]
         plt.yticks(y_range)
 
         plt.plot(omega.imag, A, '-', color='#069af3')
+        plt.xscale('log')
         plt.grid(which='both')
         plt.ylabel('Magnitude/dB')
 
