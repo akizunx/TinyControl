@@ -35,16 +35,19 @@ class TransferFunction(LinearTimeInvariant):
     def __str__(self):
         gs, *_ = _tf_to_symbol(self.num, self.den)
         gs = str(gs).replace('(', '').replace(')', '')
-        cs, rs = gs.split('/')
-        len1 = len(cs)
-        len2 = len(rs)
-        if self.dt is None:
-            return "{0}{1}\n{2}\n{3}\n".format(' ' * ((len2 - len1) // 2 + 1), cs, '-' * len2,
-                                               rs)
+
+        if self.is_gain:
+            return f'static gain: {gs}'
         else:
-            r = "{0}{1}\n{2}\n{3}\n".format(' ' * ((len2 - len1) // 2 + 1), cs, '-' * len2, rs)
-            r = r.replace('s', 'z')
-            return r + f'sample time:{self.dt}s'
+            cs, rs = gs.split('/')
+            len1 = len(cs)
+            len2 = len(rs)
+            r = "{0}{1}\n{2}\n{3}\n".format(' ' * ((len2 - len1) // 2 + 1), cs, '-' * len2,
+                                            rs)
+            if self.is_ctime:
+                return r
+            else:
+                return r.replace('s', 'z') + f'sample time:{self.dt}s'
 
     __repr__ = __str__
 
@@ -154,7 +157,7 @@ class TransferFunction(LinearTimeInvariant):
 
         num = np.convolve(self.num, other.den)
         den = np.polyadd(np.convolve(self.num, other.num),
-                         np.convolve(self.den, other.den)*sign)
+                         np.convolve(self.den, other.den) * sign)
 
         return TransferFunction(num, den, dt=dt)
 
