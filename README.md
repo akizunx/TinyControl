@@ -1,6 +1,5 @@
 # TinyControl
-TinyControl is a python lib for automatic control system analysis,
-but now only a few features have been implemented.
+A Python lib for automatic control system analysis.
 
 __IMPORTANT__ 
 
@@ -57,6 +56,10 @@ __NOTICE__
 
     D:
     [[0.]]
+
+## License
+This project is under the BSD-3-Clause License. For more information, see the file
+[LICENSE](https://github.com/DaivdZhang/TinyControl/blob/master/LICENSE).
 
 ## Contributions
 Your contributions are welcome anytime.
