@@ -59,7 +59,7 @@ __NOTICE__
 
 ## License
 This project is under the BSD-3-Clause License. For more information, see the file
-[LICENSE](https://github.com/DaivdZhang/TinyControl/blob/master/LICENSE).
+[LICENSE](https://github.com/akizunx/TinyControl/blob/master/LICENSE).
 
 ## Contributions
 Your contributions are welcome anytime.
