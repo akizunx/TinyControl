@@ -1,76 +1,16 @@
-from functools import partial, singledispatch
+from functools import singledispatch
 import warnings
 import numbers
 from typing import Union, Tuple
 
-from .transferfunction import TransferFunction, _tf_to_symbol
+from .transferfunction import TransferFunction
 from .statespace import StateSpace
 from .plot_utility import _plot_response_curve
 from .discretization import c2d
 from .model_conversion import tf2ss
 import numpy as np
-import sympy as sym
 
 __all__ = ['impulse', 'step', 'ramp', 'any_input']
-
-
-def __get_cs(sys_, input_signal):
-    """
-
-    :param sys_:
-    :type sys_: TransferFunction
-    :param input_signal:
-    :type input_signal: str
-    :return:
-    :rtype: sym.Add
-    """
-    from sympy.parsing.sympy_parser import parse_expr
-
-    s = sym.Symbol('s')
-    t = sym.Symbol('t')
-
-    input_expr = sym.simplify(parse_expr(input_signal))
-
-    signal_table = {'step': 1/s, 'impulse': 1, '0': 0, 'ramp': 1/s**2,
-                    'user': sym.laplace_transform(input_expr, t, s)[0]}
-    gs, *_ = _tf_to_symbol(sys_.num, sys_.den)
-    cs = gs*signal_table.get(input_signal, signal_table["user"])
-    return cs
-
-
-def __ilaplace(expr):
-    """
-    Use:
-        conduct the ilaplace transform
-
-    :param expr: the expression
-    :type expr: sympy.Add
-    :return:
-    :rtype:
-    """
-    from sympy.integrals.transforms import inverse_laplace_transform
-    s = sym.Symbol('s')
-    t = sym.Symbol('t')
-    cs = expr.apart(s)
-
-    tmp = sum(cs.args)
-    if expr.equals(tmp):
-        polys = [sym.nsimplify(i, tolerance=0.001, rational=True) for i in tmp.args]
-        ilaplace_p = partial(inverse_laplace_transform, s=s, t=t)
-        ct = 0
-        for i in polys:
-            i = ilaplace_p(i)
-            ct += i
-    else:
-        cs = sym.nsimplify(expr, tolerance=0.001, rational=True)
-        ct = inverse_laplace_transform(cs, s, t)
-
-    if ct.has(sym.Heaviside):
-        ct = ct.replace(sym.Heaviside, sym.numbers.One)
-    if ct.has(sym.InverseLaplaceTransform):
-        ct = ct.replace(sym.InverseLaplaceTransform, sym.numbers.Zero)
-
-    return ct
 
 
 # convert system to state space then get result
@@ -98,7 +38,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     """
     # convert transfer function or continuous system to discrete system
     dt = t[1] - t[0]
-    if dt > 0.02 and sys_.is_ctime:
+    if dt > 1 and sys_.is_ctime:
         warnings.warn("Large sample time will lead to low accuracy.",
                       stacklevel=3)
 
@@ -170,7 +110,7 @@ def _cal_x(G, H, n, x_0, u):
     """
     x = [x_0]
     for i in range(n):
-        x_k = G*x[i] + H*u[i]
+        x_k = G * x[i] + H * u[i]
         x.append(x_k)
     return x
 
@@ -181,7 +121,7 @@ def _cal_y(C, D, n, x, u):
     """
     y = []
     for i in range(n):
-        y_k = C*x[i] + D*u[i]
+        y_k = C * x[i] + D * u[i]
         y.append(y_k)
     return y
 
