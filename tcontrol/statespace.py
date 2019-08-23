@@ -69,7 +69,7 @@ class StateSpace(LinearTimeInvariant):
             return True
 
     def __neg__(self):
-        return StateSpace(self.A, self.B, -self.C, -self.D, dt=self.dt)
+        return StateSpace(self.A, self.B, -1 * self.C, -1 * self.D, dt=self.dt)
 
     def __add__(self, other):
         if self.D.shape != other.D.shape:
@@ -159,12 +159,44 @@ class StateSpace(LinearTimeInvariant):
 
     def pole(self):
         """
-        Get the poles of the system.
+        Return the poles of the system.
 
         :return: poles of the system
         :rtype: np.array
         """
         return np.linalg.eigvals(self.A)
+
+    # def zero(self, iu=None):
+    #     """
+    #     Return the zeros of the system.
+    #
+    #     :return: zeros of the system
+    #     :rtype: np.ndarray
+    #     """
+    #     from scipy.linalg import eigvals
+    #
+    #     n = self.A.shape[0]
+    #     M = np.concatenate((np.concatenate((self.A, -self.C)),
+    #                             np.concatenate((self.B, -self.D))), axis=1)
+    #     N = np.zeros_like(M)
+    #     N[0: n, 0: n] = np.eye(n)
+    #     zeros = eigvals(M, N)
+    #     zeros = zeros[zeros != np.inf]
+    #     return zeros
+
+    def ctrb_mat(self):
+        """
+        Calculate and return the matrix [B A*B A^2*B ... A^(n-1)*B].
+
+        :return: the previous matrix
+        :rtype: np.matrix
+        """
+        n = self.A.shape[0]
+        p = self.B.shape[1]
+        cmat = np.mat(np.zeros((n, n * p)))
+        for i in range(n):
+            cmat[:, i: i * p + p] = self.A ** i * self.B
+        return cmat
 
     def controllability(self):
         """
@@ -173,13 +205,12 @@ class StateSpace(LinearTimeInvariant):
         :return: the previous matrix
         :rtype: np.matrix
         """
-        tmp = self.B.copy()
-        for i in range(1, self.A.shape[0]):
-            tmp = np.concatenate((tmp, self.A**i*self.B), axis=1)
-        return tmp
+        import warnings
+        warnings.warn("controllability is deprecated, use ctrb_mat instead", DeprecationWarning)
+        return self.ctrb_mat()
 
     def to_controllable_form(self):
-        M = self.controllability().I
+        M = self.ctrb_mat().I
         p = np.asarray(M[-1]).reshape(-1)
         T = [np.asarray(p*self.A**i).reshape(-1) for i in range(self.A.shape[0])]
         T = np.mat(T)
@@ -193,10 +224,31 @@ class StateSpace(LinearTimeInvariant):
         :return: if system is controllable return True
         :rtype: bool
         """
-        if np.linalg.matrix_rank(self.controllability()) == self.A.shape[0]:
+        if np.linalg.matrix_rank(self.ctrb_mat()) == self.A.shape[0]:
             return True
         else:
             return False
+
+    def obsv_mat(self):
+        """
+        Calculate and return the matrix
+        ::
+
+            [C        ]
+            [C*A      ]
+            [C*A^2    ]
+            [   ...   ]
+            [C*A^(n-1)]
+
+        :return: the previous matrix
+        :rtype: np.matrix
+        """
+        n = self.A.shape[0]
+        q = self.C.shape[0]
+        omat = np.mat(np.zeros((n * q, n)))
+        for i in range(n):
+            omat[i: i * q + q, :] = self.C * self.A ** i
+        return omat
 
     def observability(self):
         """
@@ -212,10 +264,9 @@ class StateSpace(LinearTimeInvariant):
         :return: the previous matrix
         :rtype: np.matrix
         """
-        tmp = self.C.copy()
-        for i in range(1, self.A.shape[0]):
-            tmp = np.concatenate((tmp, self.C*self.A**i), axis=0)
-        return tmp
+        import warnings
+        warnings.warn("observability is deprecated, use obsv_mat instead", DeprecationWarning)
+        return self.obsv_mat()
 
     def is_observable(self):
         """
@@ -225,7 +276,7 @@ class StateSpace(LinearTimeInvariant):
         :return: if system is observable return True
         :rtype: bool
         """
-        if np.linalg.matrix_rank(self.observability()) == self.A.shape[0]:
+        if np.linalg.matrix_rank(self.ctrb_mat()) == self.A.shape[0]:
             return True
         else:
             return False
@@ -370,7 +421,7 @@ def ss(*args, **kwargs):
     :return: the state space of the system
     :rtype: StateSpace
     """
-    from tcontrol.model_conversion import tf2ss
+    from .model_conversion import tf2ss
     length = len(args)
     if length == 1:
         sys_ = args[0]
@@ -389,7 +440,7 @@ def ss(*args, **kwargs):
 
 
 def _convert_to_ss(obj, **kwargs):
-    from tcontrol.model_conversion import tf2ss
+    from .model_conversion import tf2ss
     if isinstance(obj, (float, int)):
         inputs = kwargs.get("inputs", 1)
         outputs = kwargs.get("outputs", 1)

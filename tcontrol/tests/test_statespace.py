@@ -84,7 +84,7 @@ class TestStateSpace(TestCase):
         self.assertTrue(self.ss_.is_controllable())
 
     def test_observability(self):
-        pass
+        self.assertTrue(np.array_equal(self.ss_.obsv_mat(), [[4, 0], [0, 4]]))
 
     def test_is_observable(self):
         self.assertTrue(self.ss_.is_observable())
