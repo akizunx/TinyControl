@@ -18,7 +18,8 @@ class TestStateSpace(TestCase):
 
     def test___init__(self):
         ss_ = StateSpace(self.A, self.B, self.C, self.D)
-        self.assertTrue(ss_.A is self.A)
+        if isinstance(ss_.A, np.matrix):
+            self.assertTrue(ss_.A is self.A)
         self.assertEqual(StateSpace(self.A, self.B, self.C, 0),
                          StateSpace(self.A, self.B, self.C, self.D))
         self.assertRaises(ValueError, StateSpace, self.A, self.C, self.B, 0)
@@ -97,9 +98,9 @@ class TestStateSpace(TestCase):
 
     def test_to_controllable_form(self):
         T = self.ss_.to_controllable_form()
-        A = T.I*self.A*T
-        B = T.I*self.B
-        C = self.C*T
+        A = np.linalg.inv(T) @ self.A @ T
+        B = np.linalg.inv(T) @ self.B
+        C = self.C @ T
         ss_1 = StateSpace(A, B, C, 0)
         ss_2 = StateSpace([[0, 1], [-4, -.5]], [[0], [1]], [4, 0], 0)
         self.assertEqual(ss_1, ss_2)

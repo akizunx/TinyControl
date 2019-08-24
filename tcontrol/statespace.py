@@ -322,15 +322,19 @@ class StateSpace(LinearTimeInvariant):
         :param poles: expected system poles
         :type poles: array_like
         :return: the feedback matrix K
-        :rtype: np.matrix
+        :rtype: np.matrix | np.ndarray
         """
         T = self.to_controllable_form()
-        A = T.I*self.A*T
+        T_I = np.linalg.inv(T)
+        A = T_I @ self.A @ T
         p = np.poly(poles)[1:]
         p = p[::-1]
         a = np.asarray(A[-1]).reshape(-1)
         K = p[::-1] + a
-        return K*T.I
+        if config['use_numpy_matrix']:
+            return np.mat(K @ T_I)
+        else:
+            return K @ T_I
 
     @classmethod
     def dual_system(cls, sys_):
@@ -368,7 +372,7 @@ class StateSpace(LinearTimeInvariant):
         :type sys_: StateSpace
 
         :return: the matrix X or None if there doesn't exist a solve
-        :rtype: np.matrix | None
+        :rtype: np.matrix | np.ndarray | None
         """
         n = sys_.A.shape[0]
         eye = sym.eye(n)
@@ -387,7 +391,10 @@ class StateSpace(LinearTimeInvariant):
 
         P = P.evalf(subs=p_set)  # evaluate the matrix P
         X = np.asarray(P.tolist(), dtype=float)
-        return np.mat(X)
+        if config['use_numpy_matrix']:
+            return np.mat(X)
+        else:
+            return X
 
 
 def place(A, B, poles):
