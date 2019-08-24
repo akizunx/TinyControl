@@ -25,7 +25,7 @@ __NOTICE__
 + Two response methods, _time response_ and _frequency response_ are only support the SISO system now.
 
 ## Dependency
-+ [Python 3](https://www.python.org)
++ [Python 3.6+](https://www.python.org)
 + [Numpy](http://www.numpy.org)
 + [Scipy](https://scipy.org/)
 + [Sympy](http://www.sympy.org)
