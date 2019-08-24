@@ -144,31 +144,31 @@ class StateSpace(LinearTimeInvariant):
         :return: the feedback system
         :rtype: StateSpace
         """
-        F = np.eye(self.inputs) - sign * k.D * self.D
-        F_inv = F.I
-        F_inv_D2 = F_inv * k.D
-        F_inv_C2 = F_inv * k.C
-        F_inv_D2_C1 = F_inv_D2 * self.C
-        F_inv_D2_D1 = F_inv_D2 * self.D
+        F = np.eye(self.inputs) - sign * k.D @ self.D
+        F_inv = np.linalg.inv(F)
+        F_inv_D2 = F_inv @ k.D
+        F_inv_C2 = F_inv @ k.C
+        F_inv_D2_C1 = F_inv_D2 @ self.C
+        F_inv_D2_D1 = F_inv_D2 @ self.D
         signed_B1 = sign * self.B
         signed_D1 = sign * self.D
 
-        A1 = self.A + signed_B1*F_inv_D2_C1
-        A2 = signed_B1*F_inv_C2
-        A3 = k.B*(self.C + signed_D1*F_inv_D2_C1)
-        A4 = k.A + sign*k.B*self.D*F_inv_C2
+        A1 = self.A + signed_B1 @ F_inv_D2_C1
+        A2 = signed_B1 @ F_inv_C2
+        A3 = k.B @ (self.C + signed_D1 @ F_inv_D2_C1)
+        A4 = k.A + sign * k.B @ self.D @ F_inv_C2
         A = np.concatenate((np.concatenate((A1, A3)),
                             np.concatenate((A2, A4))), axis=1)
 
-        B1 = self.B + signed_B1*F_inv_D2_D1
-        B2 = k.B*self.D + sign*k.B*self.D*F_inv_D2_D1
+        B1 = self.B + signed_B1 @ F_inv_D2_D1
+        B2 = k.B @ self.D + sign * k.B @ self.D @ F_inv_D2_D1
         B = np.concatenate((B1, B2))
 
-        C1 = self.C + signed_D1*F_inv_D2_C1
-        C2 = signed_D1*F_inv_C2
+        C1 = self.C + signed_D1 @ F_inv_D2_C1
+        C2 = signed_D1 @ F_inv_C2
         C = np.concatenate((C1, C2), axis=1)
 
-        D = self.D + signed_D1*F_inv_D2_D1
+        D = self.D + signed_D1 @ F_inv_D2_D1
 
         return StateSpace(A, B, C, D)
 
