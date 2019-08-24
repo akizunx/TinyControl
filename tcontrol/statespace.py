@@ -229,10 +229,15 @@ class StateSpace(LinearTimeInvariant):
         return self.ctrb_mat()
 
     def to_controllable_form(self):
-        M = self.ctrb_mat().I
+        M = np.linalg.inv(self.ctrb_mat())
         p = np.asarray(M[-1]).reshape(-1)
-        T = [np.asarray(p*self.A**i).reshape(-1) for i in range(self.A.shape[0])]
-        T = np.mat(T)
+        T = []
+        for i in range(self.A.shape[0]):
+            T.append(np.asarray(p @ np.linalg.matrix_power(self.A, i)).reshape(-1))
+        if config['use_numpy_matrix']:
+            T = np.mat(T)
+        else:
+            T = np.array(T)
         T = np.linalg.inv(T)
         return T
 
