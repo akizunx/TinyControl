@@ -56,7 +56,8 @@ def tf2ss(sys_):
 
 def ss2tf(sys_):
     """
-    Covert state space model to  transfer function model.
+    Covert state space model to transfer function model.
+    Only for SISO now
 
     :param sys_: system
     :type sys_: StateSpace
@@ -66,45 +67,31 @@ def ss2tf(sys_):
     from scipy.linalg import eigvals
 
     n = sys_.A.shape[0]
-    p = sys_.B.shape[1]
-    q = sys_.C.shape[0]
+    # p = sys_.B.shape[1]
+    # q = sys_.C.shape[0]
 
     poles = np.linalg.eigvals(sys_.A)
     den = np.poly(poles)
 
-    tfs = []
-    for i in range(p):
-        tmp = []
-        for j in range(q):
-            b = sys_.B[:, i]
-            c = sys_.C[j, :]
-            d = sys_.D[i: i + 1, j: j + 1]
+    M = np.concatenate((np.concatenate((sys_.A, -sys_.C)),
+                        np.concatenate((sys_.B, -sys_.D))), axis=1)
+    N = np.zeros_like(M)
+    N[0: n, 0: n] = np.eye(n)
+    zeros = eigvals(M, N)
+    zeros = zeros[zeros != np.inf]
+    num = np.poly(zeros)
+    if not isinstance(num, np.ndarray):
+        num = np.array([num])
 
-            M = np.concatenate((np.concatenate((sys_.A, -c)),
-                                np.concatenate((b, -d))), axis=1)
-            N = np.zeros_like(M)
-            N[0: n, 0: n] = np.eye(n)
-            zeros = eigvals(M, N)
-            zeros = zeros[zeros != np.inf]
-            num = np.poly(zeros)
-            if not isinstance(num, np.ndarray):
-                num = np.array([num])
-
-            s = np.append(poles[poles.imag == 0], zeros[zeros.imag == 0])
-            if s.size:
-                s = np.real(np.max(s) + 1)
-            else:
-                s = 1
-            u = c * (s * np.eye(n) - sys_.A).I * b + d
-            v = np.polyval(den, s) / np.polyval(num, s)
-            k = u * v
-
-            num = num.reshape(-1)
-            k = np.asarray(k).reshape(-1)
-            tmp.append(TransferFunction(k * num, den, dt=sys_.dt))
-        tfs.append(tmp)
-
-    if sys_.is_siso:
-        return tfs[0][0]
+    s = np.append(poles[poles.imag == 0], zeros[zeros.imag == 0])
+    if s.size:
+        s = np.real(np.max(s) + 1)
     else:
-        return tfs
+        s = 1
+    u = sys_.C @ np.linalg.inv(s * np.eye(n) - sys_.A) @ sys_.B + sys_.D
+    v = np.polyval(den, s) / np.polyval(num, s)
+    k = u * v
+
+    num = num.reshape(-1)
+    k = np.asarray(k).reshape(-1)
+    return TransferFunction(k * num, den, dt=sys_.dt)
