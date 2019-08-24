@@ -8,6 +8,32 @@ import sympy as sym
 __all__ = ["StateSpace", "ss", "lyapunov"]
 
 
+def _check_ss_matrix(A, B, C, D):
+    n0 = A.shape[0]
+    n1 = A.shape[1]
+    n2 = B.shape[0]
+    p = B.shape[1]
+    n3 = C.shape[1]
+    q = C.shape[0]
+
+    if n0 != n1:
+        raise ValueError(f'shape of A should be n x n, got {A.shape}')
+
+    if n2 == n3 == n0:
+        pass
+    else:
+        if n2 != n0 and n3 == n0:
+            msg = f'B should have same height with A'
+        elif n2 == n0 and n3 != n0:
+            msg = f'C should have same width with A'
+        else:
+            msg = f'B should have same height with A, C should have same width with A'
+        raise ValueError(msg)
+
+    if D.shape != (q, p):
+        raise ValueError(f'shape of D should be ({q}, {p}), got {D.shape}')
+
+
 class StateSpace(LinearTimeInvariant):
     """
     a class implement the state space model
@@ -25,21 +51,7 @@ class StateSpace(LinearTimeInvariant):
             D = np.mat(D)
 
         # check shapes of matrix A B C D
-        if A.shape[0] != A.shape[1]:
-            raise ValueError(
-                "{0} != {1}, wrong shape of A".format(A.shape[0], A.shape[1]))
-        if B.shape[0] != A.shape[0]:
-            raise ValueError(
-                "{0} != ({1}, {2}), wrong shape of B".format(B.shape, A.shape[0],
-                                                             B.shape[1]))
-        if C.shape[1] != A.shape[0]:
-            raise ValueError(
-                "{0} != ({1}, {2}), wrong shape of C".format(C.shape, A.shape[0],
-                                                             C.shape[0]))
-        if D.shape != (C.shape[0], B.shape[1]):
-            raise ValueError(
-                "{0} != ({1}, {2}), wrong shape of D".format(D.shape, C.shape[0],
-                                                             B.shape[1]))
+        _check_ss_matrix(A, B, C, D)
 
         super().__init__(B.shape[1], C.shape[0], dt)
         self.A = A
