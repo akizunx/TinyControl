@@ -204,14 +204,18 @@ class StateSpace(LinearTimeInvariant):
         Calculate and return the matrix [B A*B A^2*B ... A^(n-1)*B].
 
         :return: the previous matrix
-        :rtype: np.matrix
+        :rtype: np.matrix | np.ndarray
         """
         n = self.A.shape[0]
         p = self.B.shape[1]
-        cmat = np.mat(np.zeros((n, n * p)))
+        cmat = np.zeros((n, n * p))
         for i in range(n):
-            cmat[:, i: i * p + p] = self.A ** i * self.B
-        return cmat
+            cmat[:, i: i * p + p] = np.linalg.matrix_power(self.A, i) @ self.B
+
+        if config['use_numpy_matrix']:
+            return np.mat(cmat)
+        else:
+            return cmat
 
     def controllability(self):
         """
@@ -256,14 +260,18 @@ class StateSpace(LinearTimeInvariant):
             [C*A^(n-1)]
 
         :return: the previous matrix
-        :rtype: np.matrix
+        :rtype: np.matrix | np.ndarray
         """
         n = self.A.shape[0]
         q = self.C.shape[0]
-        omat = np.mat(np.zeros((n * q, n)))
+        omat = np.zeros((n * q, n))
         for i in range(n):
-            omat[i: i * q + q, :] = self.C * self.A ** i
-        return omat
+            omat[i: i * q + q, :] = self.C @ np.linalg.matrix_power(self.A, i)
+
+        if config['use_numpy_matrix']:
+            return np.mat(omat)
+        else:
+            return omat
 
     def observability(self):
         """
