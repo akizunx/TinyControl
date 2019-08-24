@@ -7,6 +7,7 @@ import sympy as sym
 
 __all__ = ["StateSpace", "ss", "lyapunov"]
 
+config = {'use_numpy_matrix': False}
 
 def _check_ss_matrix(A, B, C, D):
     n0 = A.shape[0]
@@ -40,15 +41,17 @@ class StateSpace(LinearTimeInvariant):
     """
 
     def __init__(self, A, B, C, D, *, dt=None):
-        # let A, B, C and D convert to numpy matrix
-        if not isinstance(A, np.matrix):
+        # let A, B, C and D convert to numpy ndarray
+        if config['use_numpy_matrix']:
             A = np.mat(A)
-        if not isinstance(B, np.matrix):
             B = np.mat(B)
-        if not isinstance(C, np.matrix):
             C = np.mat(C)
-        if not isinstance(D, np.matrix):
             D = np.mat(D)
+        else:
+            A = np.array(A, ndmin=2)
+            B = np.array(B, ndmin=2)
+            C = np.array(C, ndmin=2)
+            D = np.array(D, ndmin=2)
 
         # check shapes of matrix A B C D
         _check_ss_matrix(A, B, C, D)
