@@ -110,7 +110,7 @@ def _cal_x(G, H, n, x_0, u):
     """
     x = [x_0]
     for i in range(n):
-        x_k = G * x[i] + H * u[i]
+        x_k = G @ x[i] + np.dot(H, u[i])
         x.append(x_k)
     return x
 
@@ -121,7 +121,7 @@ def _cal_y(C, D, n, x, u):
     """
     y = []
     for i in range(n):
-        y_k = C * x[i] + D * u[i]
+        y_k = C @ x[i] + np.dot(D, u[i])
         y.append(y_k)
     return y
 
