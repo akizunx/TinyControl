@@ -16,17 +16,17 @@ def _zoh(sys_: StateSpace, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
     AT = sys_.A * sample_time
     AT_K = [np.eye(sys_.A.shape[0]), AT]
     for i in range(18):
-        AT_K.append(AT_K[-1] * AT)
+        AT_K.append(AT_K[-1] @ AT)
 
-    G = 0
+    G = np.zeros_like(AT)
     for k in range(20):
         G += AT_K[k] / math.factorial(k)
 
-    H = 0
+    H = np.zeros_like(AT)
     for k in range(20):
         H += AT_K[k] / math.factorial(k + 1)
     H *= sample_time
-    H = H * sys_.B
+    H = H @ sys_.B
     return G, H, sys_.C.copy(), sys_.D.copy()
 
 
@@ -35,10 +35,11 @@ def _tustin(sys_: StateSpace, sample_time: numbers.Real) -> Tuple[np.ndarray, ..
     eye = np.eye(sys_.A.shape[0])
     P = eye - 1 / alpha * sys_.A
     Q = eye + 1 / alpha * sys_.A
-    A = P.I * Q
-    B = P.I * sys_.B
-    C = 2 / alpha * sys_.C * P.I
-    D = sys_.D + sys_.C * B / alpha
+    P_I = np.linalg.inv(P)
+    A = P_I @ Q
+    B = P_I @ sys_.B
+    C = 2 / alpha * sys_.C @ P_I
+    D = sys_.D + sys_.C @ B / alpha
     return A, B, C, D
 
 
