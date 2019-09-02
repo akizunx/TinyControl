@@ -48,6 +48,8 @@ def _matched(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndar
     zeros = sys_.zero()
     num = np.poly(np.exp(zeros * sample_time))
     den = np.poly(np.exp(poles * sample_time))
+    num = np.atleast_1d(num)
+    den = np.atleast_1d(den)
     root_number_delta = np.roots(den).shape[0] - np.roots(num).shape[0]
     while root_number_delta > 0:
         num = np.polymul(num, np.array([1, 1]))
