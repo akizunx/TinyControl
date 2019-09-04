@@ -64,7 +64,6 @@ def ss2tf(sys_):
     :return: corresponded transfer function model
     :rtype: TransferFunction
     """
-    from scipy.linalg import eigvals
 
     n = sys_.A.shape[0]
     # p = sys_.B.shape[1]
@@ -73,12 +72,7 @@ def ss2tf(sys_):
     poles = np.linalg.eigvals(sys_.A)
     den = np.poly(poles)
 
-    M = np.concatenate((np.concatenate((sys_.A, -sys_.C)),
-                        np.concatenate((sys_.B, -sys_.D))), axis=1)
-    N = np.zeros_like(M)
-    N[0: n, 0: n] = np.eye(n)
-    zeros = eigvals(M, N)
-    zeros = zeros[zeros != np.inf]
+    zeros = sys_.zero()
     num = np.poly(zeros)
     if not isinstance(num, np.ndarray):
         num = np.array([num])

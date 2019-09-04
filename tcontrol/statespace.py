@@ -3,11 +3,13 @@ from itertools import chain
 from tcontrol.lti import LinearTimeInvariant
 from .exception import *
 import numpy as np
+from scipy.linalg import eigvals
 import sympy as sym
 
 __all__ = ["StateSpace", "ss", "lyapunov"]
 
 config = {'use_numpy_matrix': False}
+
 
 def _check_ss_matrix(A, B, C, D):
     n0 = A.shape[0]
@@ -33,6 +35,16 @@ def _check_ss_matrix(A, B, C, D):
 
     if D.shape != (q, p):
         raise ValueError(f'shape of D should be ({q}, {p}), got {D.shape}')
+
+
+def _siso_zero(A, b, c, d):
+    n = A.shape[0]
+    M = np.concatenate((np.concatenate((A, -c)),
+                        np.concatenate((b, -d))), axis=1)
+    N = np.zeros_like(M)
+    N[0: n, 0: n] = np.eye(n)
+    zeros = eigvals(M, N)
+    return zeros[zeros != np.inf]
 
 
 class StateSpace(LinearTimeInvariant):
@@ -181,23 +193,17 @@ class StateSpace(LinearTimeInvariant):
         """
         return np.linalg.eigvals(self.A)
 
-    # def zero(self, iu=None):
-    #     """
-    #     Return the zeros of the system.
-    #
-    #     :return: zeros of the system
-    #     :rtype: np.ndarray
-    #     """
-    #     from scipy.linalg import eigvals
-    #
-    #     n = self.A.shape[0]
-    #     M = np.concatenate((np.concatenate((self.A, -self.C)),
-    #                             np.concatenate((self.B, -self.D))), axis=1)
-    #     N = np.zeros_like(M)
-    #     N[0: n, 0: n] = np.eye(n)
-    #     zeros = eigvals(M, N)
-    #     zeros = zeros[zeros != np.inf]
-    #     return zeros
+    def zero(self, iu=None):
+        """
+        Return the zeros of the system.
+
+        :return: zeros of the system
+        :rtype: np.ndarray
+        """
+        if self.is_siso:
+            return _siso_zero(self.A, self.B, self.C, self.D)
+        else:
+            raise NotImplementedError
 
     def ctrb_mat(self):
         """
