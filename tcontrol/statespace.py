@@ -3,6 +3,8 @@ from itertools import chain
 from tcontrol.lti import LinearTimeInvariant
 from .exception import *
 import numpy as np
+from numpy.linalg import inv, matrix_power, matrix_rank,\
+    eigvals
 from scipy.linalg import eigvals
 import sympy as sym
 
@@ -157,7 +159,7 @@ class StateSpace(LinearTimeInvariant):
         :rtype: StateSpace
         """
         F = np.eye(self.inputs) - sign * k.D @ self.D
-        F_inv = np.linalg.inv(F)
+        F_inv = inv(F)
         F_inv_D2 = F_inv @ k.D
         F_inv_C2 = F_inv @ k.C
         F_inv_D2_C1 = F_inv_D2 @ self.C
@@ -191,7 +193,7 @@ class StateSpace(LinearTimeInvariant):
         :return: poles of the system
         :rtype: np.array
         """
-        return np.linalg.eigvals(self.A)
+        return eigvals(self.A)
 
     def zero(self, iu=None):
         """
@@ -216,7 +218,7 @@ class StateSpace(LinearTimeInvariant):
         p = self.B.shape[1]
         cmat = np.zeros((n, n * p))
         for i in range(n):
-            cmat[:, i: i * p + p] = np.linalg.matrix_power(self.A, i) @ self.B
+            cmat[:, i: i * p + p] = matrix_power(self.A, i) @ self.B
 
         if config['use_numpy_matrix']:
             return np.mat(cmat)
@@ -235,16 +237,16 @@ class StateSpace(LinearTimeInvariant):
         return self.ctrb_mat()
 
     def to_controllable_form(self):
-        M = np.linalg.inv(self.ctrb_mat())
+        M = inv(self.ctrb_mat())
         p = np.asarray(M[-1]).reshape(-1)
         T = []
         for i in range(self.A.shape[0]):
-            T.append(np.asarray(p @ np.linalg.matrix_power(self.A, i)).reshape(-1))
+            T.append(np.asarray(p @ matrix_power(self.A, i)).reshape(-1))
         if config['use_numpy_matrix']:
             T = np.mat(T)
         else:
             T = np.array(T)
-        T = np.linalg.inv(T)
+        T = inv(T)
         return T
 
     def is_controllable(self):
@@ -254,7 +256,7 @@ class StateSpace(LinearTimeInvariant):
         :return: if system is controllable return True
         :rtype: bool
         """
-        if np.linalg.matrix_rank(self.ctrb_mat()) == self.A.shape[0]:
+        if matrix_rank(self.ctrb_mat()) == self.A.shape[0]:
             return True
         else:
             return False
@@ -277,7 +279,7 @@ class StateSpace(LinearTimeInvariant):
         q = self.C.shape[0]
         omat = np.zeros((n * q, n))
         for i in range(n):
-            omat[i: i * q + q, :] = self.C @ np.linalg.matrix_power(self.A, i)
+            omat[i: i * q + q, :] = self.C @ matrix_power(self.A, i)
 
         if config['use_numpy_matrix']:
             return np.mat(omat)
@@ -310,7 +312,7 @@ class StateSpace(LinearTimeInvariant):
         :return: if system is observable return True
         :rtype: bool
         """
-        if np.linalg.matrix_rank(self.ctrb_mat()) == self.A.shape[0]:
+        if matrix_rank(self.ctrb_mat()) == self.A.shape[0]:
             return True
         else:
             return False
@@ -331,7 +333,7 @@ class StateSpace(LinearTimeInvariant):
         :rtype: np.matrix | np.ndarray
         """
         T = self.to_controllable_form()
-        T_I = np.linalg.inv(T)
+        T_I = inv(T)
         A = T_I @ self.A @ T
         p = np.poly(poles)[1:]
         p = p[::-1]

@@ -9,6 +9,7 @@ from .plot_utility import _plot_response_curve
 from .discretization import c2d
 from .model_conversion import tf2ss
 import numpy as np
+from numpy.linalg import eigvals
 
 __all__ = ['impulse', 'step', 'ramp', 'any_input']
 
@@ -217,9 +218,9 @@ def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
     return y, t
 
 
-def _setup_time_vector(sys_: StateSpace, n: int=1000):
-    eigvals = np.linalg.eigvals(sys_.A)
-    tc = 1 / np.min(np.abs(eigvals)) * 2
+def _setup_time_vector(sys_: StateSpace, n=1000):
+    ev = eigvals(sys_.A)
+    tc = 1 / np.min(np.abs(ev)) * 2
     if tc == np.inf:
         tc = 1
     if sys_.is_ctime:

@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 import numpy as np
+from numpy.linalg import inv
 from tcontrol.statespace import *
 from tcontrol.transferfunction import *
 from ..model_conversion import *
@@ -98,8 +99,8 @@ class TestStateSpace(TestCase):
 
     def test_to_controllable_form(self):
         T = self.ss_.to_controllable_form()
-        A = np.linalg.inv(T) @ self.A @ T
-        B = np.linalg.inv(T) @ self.B
+        A = inv(T) @ self.A @ T
+        B = inv(T) @ self.B
         C = self.C @ T
         ss_1 = StateSpace(A, B, C, 0)
         ss_2 = StateSpace([[0, 1], [-4, -.5]], [[0], [1]], [4, 0], 0)

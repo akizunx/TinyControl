@@ -8,6 +8,7 @@ from .statespace import StateSpace
 from .exception import WrongSampleTime, UnknownDiscretizationMethod
 from .model_conversion import *
 import numpy as np
+from numpy.linalg import inv
 
 __all__ = ['c2d']
 
@@ -35,7 +36,7 @@ def _tustin(sys_: StateSpace, sample_time: numbers.Real) -> Tuple[np.ndarray, ..
     eye = np.eye(sys_.A.shape[0])
     P = eye - 1 / alpha * sys_.A
     Q = eye + 1 / alpha * sys_.A
-    P_I = np.linalg.inv(P)
+    P_I = inv(P)
     A = P_I @ Q
     B = P_I @ sys_.B
     C = 2 / alpha * sys_.C @ P_I

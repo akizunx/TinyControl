@@ -2,6 +2,8 @@ from .transferfunction import TransferFunction
 from .statespace import StateSpace
 
 import numpy as np
+from numpy.linalg import inv,\
+    eigvals
 
 __all__ = ['tf2ss', 'ss2tf']
 
@@ -69,7 +71,7 @@ def ss2tf(sys_):
     # p = sys_.B.shape[1]
     # q = sys_.C.shape[0]
 
-    poles = np.linalg.eigvals(sys_.A)
+    poles = eigvals(sys_.A)
     den = np.poly(poles)
 
     zeros = sys_.zero()
@@ -82,7 +84,7 @@ def ss2tf(sys_):
         s = np.real(np.max(s) + 1)
     else:
         s = 1
-    u = sys_.C @ np.linalg.inv(s * np.eye(n) - sys_.A) @ sys_.B + sys_.D
+    u = sys_.C @ inv(s * np.eye(n) - sys_.A) @ sys_.B + sys_.D
     v = np.polyval(den, s) / np.polyval(num, s)
     k = u * v
 
