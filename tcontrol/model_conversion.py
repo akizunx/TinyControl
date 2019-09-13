@@ -2,8 +2,6 @@ from .transferfunction import TransferFunction
 from .statespace import StateSpace
 
 import numpy as np
-from numpy.linalg import inv,\
-    eigvals
 
 __all__ = ['tf2ss', 'ss2tf']
 
@@ -61,6 +59,13 @@ def ss2tf(sys_):
     Covert state space model to transfer function model.
     Only for SISO now
 
+    a(s) = det(sI - A)
+    R_{n-1} = I
+    R_{n-2} = R_{n-1} * A + a_{n-1} * I
+    E_{n-1} = C * R_{n-1} * B
+
+    G(s) = (E_{n-1}s^{n-1} + E_{n-2}s^{n-2} + ... + E_0) / a(s) + D
+
     :param sys_: system
     :type sys_: StateSpace
     :return: corresponded transfer function model
@@ -68,26 +73,20 @@ def ss2tf(sys_):
     """
 
     n = sys_.A.shape[0]
-    # p = sys_.B.shape[1]
-    # q = sys_.C.shape[0]
+    p = sys_.B.shape[1]
+    q = sys_.C.shape[0]
 
-    poles = eigvals(sys_.A)
-    den = np.poly(poles)
+    cp = np.poly(sys_.A) # characteristic polynomial
+    I = np.eye(n)
+    R = I
+    E = np.empty((q * n, p))
 
-    zeros = sys_.zero()
-    num = np.poly(zeros)
-    if not isinstance(num, np.ndarray):
-        num = np.array([num])
+    for i in range(n):
+        E[q * i: q * i + q, :] = sys_.C @ R @ sys_.B
+        R = R @ sys_.A + cp[i + 1] * I
 
-    s = np.append(poles[poles.imag == 0], zeros[zeros.imag == 0])
-    if s.size:
-        s = np.real(np.max(s) + 1)
+    if sys_.is_siso:
+        num = np.polyadd(E.T[0], cp * sys_.D[0, 0])
+        return TransferFunction(num, cp, dt=sys_.dt)
     else:
-        s = 1
-    u = sys_.C @ inv(s * np.eye(n) - sys_.A) @ sys_.B + sys_.D
-    v = np.polyval(den, s) / np.polyval(num, s)
-    k = u * v
-
-    num = num.reshape(-1)
-    k = np.asarray(k).reshape(-1)
-    return TransferFunction(k * num, den, dt=sys_.dt)
+        raise NotImplementedError('Not implement for mimo')
