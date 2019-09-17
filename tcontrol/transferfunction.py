@@ -42,8 +42,10 @@ class TransferFunction(LinearTimeInvariant):
             cs, rs = gs.split('/')
             len1 = len(cs)
             len2 = len(rs)
-            r = "{0}{1}\n{2}\n{3}\n".format(' ' * ((len2 - len1) // 2 + 1), cs, '-' * len2,
-                                            rs)
+            len_diff = len2 - len1
+            indent = ' ' * (len_diff // 2) if not len_diff % 2 else ' ' * (len_diff // 2 + 1)
+            r = f'{indent}{cs}\n{"-" * len2}\n{rs}'
+
             if self.is_ctime:
                 return r
             else:
