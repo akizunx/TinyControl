@@ -39,6 +39,15 @@ def _check_ss_matrix(A, B, C, D):
         raise ValueError(f'shape of D should be ({q}, {p}), got {D.shape}')
 
 
+def _pick_dt(sys1, sys2):
+    if sys1.dt is None and sys2.dt is not None:
+        return sys2.dt
+    elif sys1.dt is not None and sys2.dt is None or sys1.dt == sys2.dt:
+        return sys1.dt
+    else:
+        raise ValueError("different sampling times")
+
+
 def _siso_zero(A, b, c, d):
     n = A.shape[0]
     M = np.concatenate((np.concatenate((A, -c)),
@@ -101,52 +110,91 @@ class StateSpace(LinearTimeInvariant):
         return StateSpace(self.A, self.B, -1 * self.C, -1 * self.D, dt=self.dt)
 
     def __add__(self, other):
-        if self.D.shape != other.D.shape:
-            raise ValueError("shapes of D are not equal {0}, {1}".format(self.D.shape,
-                                                                         other.D.shape))
-
-        if self.dt is None and other.dt is not None:
-            dt = other.dt
-        elif self.dt is not None and other.dt is None or self.dt == other.dt:
-            dt = self.dt
-        else:
-            raise ValueError("different sampling times")
-
-        A = np.zeros((self.A.shape[0] + other.A.shape[0],
-                      self.A.shape[1] + other.A.shape[1]))
-        A[0: self.A.shape[0], 0: self.A.shape[1]] = self.A
-        A[self.A.shape[0]:, self.A.shape[1]:] = other.A
-        B = np.concatenate((self.B, other.B), axis=0)
-        C = np.concatenate((self.C, other.C), axis=1)
-        D = self.D + other.D
-        return StateSpace(A, B, C, D, dt=dt)
+        return self.parallel(other)
 
     __radd__ = __add__
 
     def __mul__(self, other):
         if not isinstance(other, StateSpace):
             other = _convert_to_ss(other)
+        return other.cascade(self)
 
+    def __rmul__(self, other):
+        other = _convert_to_ss(other)
+        return self.cascade(other)
+
+    def parallel(self, *systems):
+        """
+        Return the paralleled system according to given systems,
+        as the following shows.
+                     _____
+                ----| sys1|----
+                |    -----     |
+                |    _____     |
+        u(t) --- ---| sys2|---- --- y(t)
+                |    -----     |
+                |      :       |
+                |      :       |
+                |    _____     |
+                ----| sysn|----
+                     -----
+        :param systems: systems to be paralleled
+        :return: the parallel system
+        """
+        other = systems[0]
+        if other.D.shape != self.D.shape:
+            msg = 'two parallel systems should have the same numbers of input and output, '
+            raise ValueError(msg + f"got {self.D.shape}, {other.D.shape}")
+
+        n1 = self.A.shape[0]
+        n = n1 + other.A.shape[0]
+        A = np.zeros((n, n))
+        A[0: n1, 0: n1] = self.A
+        A[n1:, n1:] = other.A
+        B = np.concatenate((self.B, other.B), axis=0)
+        C = np.concatenate((self.C, other.C), axis=1)
+        D = self.D + other.D
+
+        dt = _pick_dt(self, other)
+
+        parallel_system = StateSpace(A, B, C, D, dt=dt)
+        if systems[1:]:
+            return parallel_system.parallel(*systems[1:])
+        else:
+            return parallel_system
+
+    def cascade(self, *systems):
+        """
+        Cascade given system from self to the end of systems,
+        as the following shows.
+
+                _____    _____           _____
+        u(t)---| sys1|--| sys2|-- ... --| sysn|---y(t)
+                -----    -----           -----
+
+        :param systems: systems to be cascaded
+        :return: the serial system
+        """
+        other = systems[0]
         if self.outputs != other.inputs:
             raise ValueError("outputs are not equal to inputs")
+        n1 = self.A.shape[0]
+        n = n1 + other.A.shape[0]
+        A = np.zeros((n, n))
+        A[0: n1, 0: n1] = self.A
+        A[n1:, n1:] = other.A
+        A[n1:, 0: n1] = other.B @ self.C
+        B = np.concatenate((self.B, other.B @ self.D), axis=0)
+        C = np.concatenate((other.D @ self.C, other.C), axis=1)
+        D = other.D @ self.D
 
-        if self.dt is None and other.dt is not None:
-            dt = other.dt
-        elif self.dt is not None and other.dt is None or self.dt == other.dt:
-            dt = self.dt
+        dt = _pick_dt(self, other)
+
+        serial_system = StateSpace(A, B, C, D, dt=dt)
+        if systems[1:]:
+            return serial_system.cascade(*systems[1:])
         else:
-            raise ValueError("Sampling time is different. "
-                             "one is {0}, the other is {1}".format(self.dt, other.dt))
-
-        A = np.zeros((self.A.shape[0] + other.A.shape[0],
-                      self.A.shape[1] + other.A.shape[1]))
-        A[0: self.A.shape[0], 0: self.A.shape[1]] = self.A
-        A[self.A.shape[0]:, self.A.shape[1]:] = other.A
-        A[0: self.A.shape[0], self.A.shape[0]:] = self.B*other.C
-        B = np.concatenate((other.B, self.B*other.D), axis=0)
-        C = np.concatenate((self.D*other.C, self.C), axis=1)
-        D = self.D*other.D
-        return StateSpace(A, C.T, B.T, D, dt=dt)
+            return serial_system
 
     def feedback(self, k, sign=-1):
         """
@@ -487,9 +535,9 @@ def _convert_to_ss(obj, **kwargs):
     if isinstance(obj, (float, int)):
         inputs = kwargs.get("inputs", 1)
         outputs = kwargs.get("outputs", 1)
-        return StateSpace(np.matrix(0), np.zeros((1, inputs)), np.zeros(outputs, 1),
-                          np.ones((outputs, inputs))*obj)
-    elif isinstance(obj, LinearTimeInvariant):
+        return StateSpace(np.zeros((1, 1)), np.zeros((1, inputs)), np.zeros((outputs, 1)),
+                          np.ones((outputs, inputs)) * obj)
+    elif issubclass(obj.__class__, LinearTimeInvariant):
         return tf2ss(obj)
     else:
         raise TypeError("wrong type. got {0}".format(type(obj)))

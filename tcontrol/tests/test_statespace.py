@@ -38,7 +38,10 @@ class TestStateSpace(TestCase):
         self.assertEqual(ss_1, ss_2)
 
     def test___mul__(self):
-        pass
+        print(ss([[2, 3], [1, 0]], [[0], [1]], [[1, 0]], 0) * 1)
+
+    def test_parallel(self):
+        print(self.ss_.parallel(self.ss_, self.ss_))
 
     def test_feedback(self):
         A = [[0.814723686393179, 0.913375856139019, 0.278498218867048],
