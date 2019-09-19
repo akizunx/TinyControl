@@ -110,9 +110,13 @@ class StateSpace(LinearTimeInvariant):
         return StateSpace(self.A, self.B, -1 * self.C, -1 * self.D, dt=self.dt)
 
     def __add__(self, other):
+        if not isinstance(other, StateSpace):
+            other = _convert_to_ss(other)
         return self.parallel(other)
 
-    __radd__ = __add__
+    def __radd__(self, other):
+        other = _convert_to_ss(other)
+        return other.parallel(self)
 
     def __mul__(self, other):
         if not isinstance(other, StateSpace):
