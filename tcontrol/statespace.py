@@ -108,6 +108,7 @@ class StateSpace(LinearTimeInvariant):
         tmp = []
         for x, y in zip(c_row_str, d_row_str):
             tmp.append(f'  {x}  {y}')
+        tmp.pop()
         s4 = '\n'.join(tmp)
 
         return '\n'.join([s1, s2, s3, s4])
