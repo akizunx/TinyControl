@@ -86,13 +86,34 @@ class StateSpace(LinearTimeInvariant):
         self.D = D
 
     def __str__(self):
-        a_str = 'A:\n' + str(self.A) + '\n\n'
-        b_str = 'B:\n' + str(self.B) + '\n\n'
-        c_str = 'C:\n' + str(self.C) + '\n\n'
-        d_str = 'D:\n' + str(self.D) + '\n\n'
-        return a_str + b_str + c_str + d_str
+        a_str = str(self.A)[1: -1]
+        b_str = str(self.B)[1: -1]
+        a_row_str = a_str.split('\n ')
+        b_row_str = b_str.split('\n ')
 
-    __repr__ = __str__
+        s1 = f'A:{" " * (len(a_row_str[0]))}B:'
+        tmp = []
+        for x, y in zip(a_row_str, b_row_str):
+            tmp.append(f'  {x}  {y}')
+        s2 = '\n'.join(tmp)
+
+        dummy_row = np.atleast_2d(self.A[-1])
+        c_str = str(np.concatenate((self.C, dummy_row), 0))[1: -1]
+        dummy_row = np.atleast_2d(self.B[-1])
+        d_str = str(np.concatenate((self.D, dummy_row), 0))[1: -1]
+        c_row_str = c_str.split('\n ')
+        d_row_str = d_str.split('\n ')
+
+        s3 = f'C:{" " * (len(a_row_str[0]))}D:'
+        tmp = []
+        for x, y in zip(c_row_str, d_row_str):
+            tmp.append(f'  {x}  {y}')
+        s4 = '\n'.join(tmp)
+
+        return '\n'.join([s1, s2, s3, s4])
+
+    def __repr__(self):
+        return str(self)
 
     def __eq__(self, other):
         return np.array_equal(self.A, other.A) and \
