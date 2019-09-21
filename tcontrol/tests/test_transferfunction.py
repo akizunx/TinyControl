@@ -1,5 +1,7 @@
 from unittest import TestCase
+
 from tcontrol.transferfunction import TransferFunction, tf, zpk
+from .tools.test_utility import assert_tf_equal, assert_array_almost_equal
 from ..exception import *
 import numpy as np
 
@@ -12,7 +14,7 @@ class TestTransferFunction(TestCase):
         self.s4 = TransferFunction([2, 0], [1, 4, 3])
         self.s5 = TransferFunction([1, 4, 3], [1, 4, 5, 0])
         self.s6 = TransferFunction([3, 4, 3], [1, 4, 3, 0])
-        self.s7 = TransferFunction([2], [1, 4, 3])
+        self.s7 = TransferFunction([2, 0], [1, 4, 3, 0])
         self.s8 = TransferFunction([1], [1, 2, 1])
         self.s9 = TransferFunction([1, 2, 3, 0], [1, 2, 2, 2, 1])
 
@@ -25,53 +27,46 @@ class TestTransferFunction(TestCase):
         self.assertNotEqual(id(self.s1.den), id(self.s2.den))
 
     def test___neg__(self):
-        self.assertEqual(-self.s, self.neg_s)
+        assert_tf_equal(-self.s, self.neg_s)
 
     def test_parallel(self):
         sys_ = tf([5, 24, 34, 24, 9], [1, 8, 22, 24, 9, 0])
-        self.assertEqual(self.s3.parallel(self.s4, self.s4), sys_)
+        assert_tf_equal(self.s3.parallel(self.s4, self.s4), sys_)
 
     def test__cascade(self):
         sys_ = tf([4, 0, 0], [1, 8, 22, 24, 9, 0])
-        self.assertEqual(self.s3.cascade(self.s4, self.s4), sys_)
+        assert_tf_equal(self.s3.cascade(self.s4, self.s4), sys_)
 
     def test_feedback(self):
-        self.assertEqual(self.s3.feedback(self.s4), self.s5)
+        assert_tf_equal(self.s3.feedback(self.s4), self.s5)
 
     def test___add__(self):
-        self.assertEqual(self.s3 + self.s4, self.s6)
+        assert_tf_equal(self.s3 + self.s4, self.s6)
 
     def test___mul__(self):
-        self.assertEqual(self.s3 * self.s4, self.s7)
+        assert_tf_equal(self.s3 * self.s4, self.s7)
 
     def test___sub__(self):
-        self.assertEqual(self.s1 - self.s8, self.s9)
+        assert_tf_equal(self.s1 - self.s8, self.s9)
 
     def test_pole(self):
         s = TransferFunction([1, 2], [1, 2, 1])
-        self.assertEqual((s.pole() == np.roots([1, 2, 1])).all(), True)
-        s = TransferFunction([1, 2], [1, 1, 1, -1])
-        r = s.pole() == np.roots([1, 1, 1, -1])
-        self.assertEqual(all(r), True)
+        assert_array_almost_equal(s.pole(), [-1, -1])
+        s = TransferFunction([1, 2], [1, 1, -1, -1])
+        assert_array_almost_equal(np.sort(s.pole()), [-1, -1, 1])
 
     def test_zero(self):
         s = TransferFunction([1, 2], [1, 2, 1])
         self.assertEqual((s.zero() == np.roots([1, 2])).all(), True)
 
     def test_tf(self):
-        self.assertEqual(tf([1], [1, 0]), TransferFunction([1], [1, 0]))
-        self.assertEqual(tf(TransferFunction([1], [1, 0])), TransferFunction([1], [1, 0]))
-        s1 = tf(TransferFunction([1], [1, 0]))
-        s2 = TransferFunction([2], [2, 0])
-        self.assertEqual(s1, s2)
-        s3 = tf([1, 1], [1, 0, -1])
-        s4 = tf([1], [1, -1])
-        self.assertEqual(s3, s4)
+        assert_tf_equal(tf([1], [1, 0]), TransferFunction([1], [1, 0]))
+        assert_tf_equal(tf(TransferFunction([1], [1, 0])), tf([1], [1, 0]))
 
     def test_zpk(self):
         s1 = TransferFunction([5, 5], [1, 0, -4])
         s2 = zpk([-1], [-2, 2], 5)
-        self.assertEqual(s1, s2)
+        assert_tf_equal(s1, s2)
 
     def test_bad_input(self):
         self.assertRaises(WrongNumberOfArguments, tf, *[[1], 2, 3, 4])

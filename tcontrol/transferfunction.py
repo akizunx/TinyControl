@@ -28,8 +28,6 @@ class TransferFunction(LinearTimeInvariant):
         num = np.poly1d(num).coeffs
         den = np.poly1d(den).coeffs
 
-        num, den = _poly_simplify(num, den)
-
         super().__init__(1, 1, dt)
         self.num = num
         self.den = den
@@ -147,8 +145,6 @@ class TransferFunction(LinearTimeInvariant):
         num = np.convolve(self.num, other.num)
         den = np.convolve(self.den, other.den)
 
-        num, den = _poly_simplify(num, den)
-
         dt = _get_dt(self, other)
 
         serial_system = TransferFunction(num, den, dt=dt)
@@ -209,44 +205,6 @@ def _tf_to_symbol(num, den):
     rs = sym.Poly.from_list(den, gens=s)
     gs = cs / rs
     return gs, cs, rs
-
-
-def _poly_simplify(num, den):
-    _, cs, rs = _tf_to_symbol(num, den)
-    r = np.array(sym.gcd(cs, rs).as_poly().all_coeffs()).astype(num.dtype)
-    if not np.array_equal(np.array([1]), r):
-        num = np.polydiv(num, r)[0]
-        den = np.polydiv(den, r)[0]
-
-    return num, den
-
-
-# def _poly_gcd(a, b):
-#     s = sym.Symbol('s')
-#     r = sym.gcd(a, b)
-#     if r.is_Number:
-#         return np.array([r], dtype=float)
-#     p = sym.polys.polytools.poly(r)
-#     n = 0
-#     r = []
-#     while True:
-#         k = sym.polys.polytools.Poly.coeff_monomial(p, s**n)
-#         if k.is_integer:
-#             k = int(k)
-#         elif k.is_real:
-#             k = float(k)
-#         elif k.is_complex:
-#             k = complex(k)
-#         else:
-#             raise ValueError('unexpected coeff type')
-#
-#         if k == 0 and n != 0:
-#             break
-#         else:
-#             r.insert(0, k)
-#         n += 1
-#     r = np.array(r)
-#     return r
 
 
 def tf(*args, **kwargs):
