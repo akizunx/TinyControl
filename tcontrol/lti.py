@@ -36,7 +36,7 @@ Reference: https://github.com/python-control/python-control
 import warnings
 
 
-__all__ = ['LinearTimeInvariant']
+__all__ = ['LinearTimeInvariant', 'isctime', 'isdtime', 'issiso']
 
 
 class LinearTimeInvariant(object):
@@ -91,6 +91,15 @@ class LinearTimeInvariant(object):
 
     @property
     def is_gain(self):
+        raise NotImplementedError('This should be implemented by subclass')
+
+    def parallel(self, *args):
+        raise NotImplementedError('This should be implemented by subclass')
+
+    def cascade(self, *args):
+        raise NotImplementedError('This should be implemented by subclass')
+
+    def feedback(self, *args, **kwargs):
         raise NotImplementedError('This should be implemented by subclass')
 
 

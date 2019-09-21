@@ -77,17 +77,7 @@ class TransferFunction(LinearTimeInvariant):
         """
         if isinstance(other, numbers.Real):
             other = TransferFunction([other], [1])
-
-        dt = _get_dt(self, other)
-
-        if np.array_equal(self.den, other.den):
-            return TransferFunction(np.polyadd(self.num, other.num), self.den, dt=dt)
-
-        den = np.convolve(self.den, other.den)
-        num = np.polyadd(np.convolve(self.num, other.den),
-                         np.convolve(other.num, self.den))
-
-        return TransferFunction(num, den, dt=dt)
+        return self.parallel(other)
 
     __radd__ = __add__
 
@@ -107,14 +97,7 @@ class TransferFunction(LinearTimeInvariant):
         if isinstance(other, numbers.Real):
             return TransferFunction(self.num * other, self.den, dt=self.dt)
 
-        num = np.convolve(self.num, other.num)
-        den = np.convolve(self.den, other.den)
-
-        num, den = _poly_simplify(num, den)
-
-        dt = _get_dt(self, other)
-
-        return TransferFunction(num, den, dt=dt)
+        return other.cascade(self)
 
     __rmul__ = __mul__
 
@@ -139,6 +122,38 @@ class TransferFunction(LinearTimeInvariant):
         :rtype: numpy.ndarray
         """
         return np.roots(self.num)
+
+    def parallel(self, *systems):
+        other = systems[0]
+
+        dt = _get_dt(self, other)
+        if np.array_equal(self.den, other.den):
+            den = self.den
+        else:
+            den = np.convolve(self.den, other.den)
+        num = np.polyadd(np.convolve(self.num, other.den),
+                         np.convolve(other.num, self.den))
+
+        parallel_system = TransferFunction(num, den, dt=dt)
+        if systems[1:]:
+            return parallel_system.parallel(*systems[1:])
+        else:
+            return parallel_system
+
+    def cascade(self, *systems):
+        other = systems[0]
+        num = np.convolve(self.num, other.num)
+        den = np.convolve(self.den, other.den)
+
+        num, den = _poly_simplify(num, den)
+
+        dt = _get_dt(self, other)
+
+        serial_system = TransferFunction(num, den, dt=dt)
+        if systems[1:]:
+            return serial_system.cascade(*systems[1:])
+        else:
+            return serial_system
 
     def feedback(self, other=1, sign=1):
         """

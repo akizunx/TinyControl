@@ -27,6 +27,14 @@ class TestTransferFunction(TestCase):
     def test___neg__(self):
         self.assertEqual(-self.s, self.neg_s)
 
+    def test_parallel(self):
+        sys_ = tf([5, 24, 34, 24, 9], [1, 8, 22, 24, 9, 0])
+        self.assertEqual(self.s3.parallel(self.s4, self.s4), sys_)
+
+    def test__cascade(self):
+        sys_ = tf([4, 0, 0], [1, 8, 22, 24, 9, 0])
+        self.assertEqual(self.s3.cascade(self.s4, self.s4), sys_)
+
     def test_feedback(self):
         self.assertEqual(self.s3.feedback(self.s4), self.s5)
 
@@ -34,7 +42,7 @@ class TestTransferFunction(TestCase):
         self.assertEqual(self.s3 + self.s4, self.s6)
 
     def test___mul__(self):
-        self.assertEqual(self.s3*self.s4, self.s7)
+        self.assertEqual(self.s3 * self.s4, self.s7)
 
     def test___sub__(self):
         self.assertEqual(self.s1 - self.s8, self.s9)
