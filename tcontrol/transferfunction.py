@@ -24,8 +24,10 @@ class TransferFunction(LinearTimeInvariant):
     """
 
     def __init__(self, num, den, *, dt=None):
-        num = np.array(np.poly1d(num))
-        den = np.array(np.poly1d(den))
+        # turn to poly1d for discarding redundant 0 in numerator and denominator
+        num = np.poly1d(num).coeffs
+        den = np.poly1d(den).coeffs
+
         num, den = _poly_simplify(num, den)
 
         super().__init__(1, 1, dt)
