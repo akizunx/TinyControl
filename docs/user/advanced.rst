@@ -4,7 +4,7 @@ Advanced Usage
 System Stability Analysis
 -------------------------
 The tcontrol package provides some function for this usage.
-::
+
 
 Pole-Zero Map
 >>>>>>>>>>>>>
@@ -42,3 +42,18 @@ For the state space model, there is a special method to analyze the system.
     >>> system = tc.tf2ss(tc.tf([1], [1, 1]))
     >>> tc.lyapunov(system)
     [[0.5]]
+
+Discretization
+--------------
+You can use c2d function to discretize a continuous system.
+And c2d provides three methods to do this work.
+
+Zero-Order-Hold Method
+>>>>>>>>>>>>>>>>>>>>>>
+    >>> system = tc.tf([1], [1, 1])
+    >>> tc.c2d(system, 1, 'zoh')
+         0.632120558828558
+    -------------------------
+    1.0*z - 0.367879441171442
+    sample time:1s
+    >>> step(system)
