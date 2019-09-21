@@ -79,14 +79,27 @@ def ss2tf(sys_):
     cp = np.poly(sys_.A) # characteristic polynomial
     I = np.eye(n)
     R = I
-    E = np.empty((q * n, p))
+    E = np.empty((n, q * p))
 
     for i in range(n):
-        E[q * i: q * i + q, :] = sys_.C @ R @ sys_.B
+        E[i] = (sys_.C @ R @ sys_.B).ravel('C')
         R = R @ sys_.A + cp[i + 1] * I
 
+    # every row in E presents coefficients of each numerator polynomial
+    E = E.T
+    # make sure every element in D correspond to the very E's row
+    D = sys_.D.flatten('C').T
     if sys_.is_siso:
-        num = np.polyadd(E.T[0], cp * sys_.D[0, 0])
+        num = np.polyadd(E[0], cp * D[0])
         return TransferFunction(num, cp, dt=sys_.dt)
     else:
-        raise NotImplementedError('Not implement for mimo')
+        # return mimo as a list of TransferFunction temporarily
+        ret = []
+        r = []
+        for i in range(q * p):
+            num = np.polyadd(E[i], cp * D[i])
+            r.append(TransferFunction(num, cp, dt=sys_.dt))
+            if (i + 1) % p == 0:
+                ret.append(r)
+                r = []
+        return ret
