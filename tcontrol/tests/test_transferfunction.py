@@ -32,6 +32,7 @@ class TestTransferFunction(TestCase):
     def test_parallel(self):
         sys_ = tf([5, 24, 34, 24, 9], [1, 8, 22, 24, 9, 0])
         assert_tf_equal(self.s3.parallel(self.s4, self.s4), sys_)
+        assert_tf_equal(self.s3.parallel(self.s3), tf([2], [1, 0]))
 
     def test__cascade(self):
         sys_ = tf([4, 0, 0], [1, 8, 22, 24, 9, 0])
@@ -42,9 +43,11 @@ class TestTransferFunction(TestCase):
 
     def test___add__(self):
         assert_tf_equal(self.s3 + self.s4, self.s6)
+        assert_tf_equal(self.s3 + 1, tf([1, 1], [1, 0]))
 
     def test___mul__(self):
         assert_tf_equal(self.s3 * self.s4, self.s7)
+        assert_tf_equal(self.s3 * 0.5, tf([0.5], [1, 0]))
 
     def test___sub__(self):
         assert_tf_equal(self.s1 - self.s8, self.s9)
@@ -71,3 +74,5 @@ class TestTransferFunction(TestCase):
     def test_bad_input(self):
         self.assertRaises(WrongNumberOfArguments, tf, *[[1], 2, 3, 4])
         self.assertRaises(TypeError, tf, [1, 3, 4, 5])
+        self.assertRaises(WrongNumberOfArguments, tf, **{})
+        self.assertRaises(WrongNumberOfArguments, tf, **{'num': [1]})

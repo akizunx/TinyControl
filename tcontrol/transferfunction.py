@@ -119,10 +119,11 @@ class TransferFunction(LinearTimeInvariant):
         dt = _get_dt(self, other)
         if np.array_equal(self.den, other.den):
             den = self.den
+            num = np.polyadd(self.num, other.num)
         else:
             den = np.convolve(self.den, other.den)
-        num = np.polyadd(np.convolve(self.num, other.den),
-                         np.convolve(other.num, self.den))
+            num = np.polyadd(np.convolve(self.num, other.den),
+                             np.convolve(other.num, self.den))
 
         parallel_system = TransferFunction(num, den, dt=dt)
         if systems[1:]:
