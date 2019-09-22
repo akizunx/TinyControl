@@ -49,7 +49,7 @@ class TransferFunction(LinearTimeInvariant):
             if self.is_ctime:
                 return r
             else:
-                return r.replace('s', 'z') + f'sample time:{self.dt}s'
+                return r.replace('s', 'z') + f'\nsample time:{self.dt}s'
 
     __repr__ = __str__
 
@@ -211,10 +211,18 @@ def tf(*args, **kwargs):
         >>> from tcontrol import tf
         >>> system = tf([1, 1], [1, 0.5, 1])
         >>> print(system)
-        (s + 1)/(1.0*s**2 + 0.5*s + 1.0)
-        >>> system = tf(system)
-        >>> print(system)
-        (s + 1)/(1.0*s**2 + 0.5*s + 1.0)
+                 s + 1
+        ----------------------
+        1.0*s**2 + 0.5*s + 1.0
+        >>> tf(system)
+                 s + 1
+        ----------------------
+        1.0*s**2 + 0.5*s + 1.0
+        >>> tf([1], [1, 1], 1)
+          1
+        -----
+        z + 1
+        sample time:1s
     """
     length = len(args)
     if length == 2:
@@ -228,8 +236,8 @@ def tf(*args, **kwargs):
             den = args[0].den
             dt = args[0].dt
         except AttributeError:
-            raise TypeError(
-                "type of arg should be TransferFunction, got {0}".format(type(args[0])))
+            msg = f'type of arg should be TransferFunction, got {type(args[0])}'
+            raise TypeError(msg)
     elif length == 0:
         num = kwargs.get('num')
         den = kwargs.get('den')
@@ -239,9 +247,7 @@ def tf(*args, **kwargs):
     else:
         raise WrongNumberOfArguments(f'1, 2 or 3 arg(s) expected. received {length}')
 
-    sys_ = TransferFunction(num, den, dt=dt)
-    return sys_
-
+    return TransferFunction(num, den, dt=dt)
 
 def zpk(z, p, k):
     """
