@@ -2,8 +2,8 @@ import sys
 
 from setuptools import setup, find_packages
 
-if sys.version_info[: 2] < (3, 5):
-    raise RuntimeError('Python version >= 3.5 required')
+if sys.version_info[: 2] < (3, 6):
+    raise RuntimeError('Python version >= 3.6 required')
 
 MAJOR = 0
 MINOR = 8
