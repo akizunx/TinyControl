@@ -143,14 +143,14 @@ class TransferFunction(LinearTimeInvariant):
         else:
             return serial_system
 
-    def feedback(self, other=1, sign=1):
+    def feedback(self, other=1, sign=-1):
         """
         Add the feedback channel.
 
         :param other: the transfer function of the feedback path
         :type other: TransferFunction | int
-        :param sign: if sign is 1 function will create the negative feedback.
-                     if sign is -1, the positive feedback
+        :param sign: if sign is -1 function will create the negative feedback.
+                     if sign is 1, the positive feedback.
         :type sign: int
         :return: original system with a feedback channel
         :rtype: TransferFunction
@@ -162,7 +162,7 @@ class TransferFunction(LinearTimeInvariant):
 
         num = np.convolve(self.num, other.den)
         den = np.polyadd(np.convolve(self.num, other.num),
-                         np.convolve(self.den, other.den) * sign)
+                         np.convolve(self.den, other.den) * (-sign))
 
         return TransferFunction(num, den, dt=dt)
 
