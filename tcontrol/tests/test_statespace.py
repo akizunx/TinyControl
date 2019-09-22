@@ -136,9 +136,6 @@ class TestStateSpace(TestCase):
         error = np.abs(d_ss_.D - 1 / 3)
         self.assertTrue(np.all(np.less_equal(error, 1e-6)))
 
-    def test_ss2tf(self):
-        self.assertEqual(ss2tf(self.ss_), self.tf_)
-
     def test_lyapunov(self):
         A = [[0, 1], [-2, -3]]
         B = [[0], [1]]

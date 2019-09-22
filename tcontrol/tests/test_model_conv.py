@@ -3,7 +3,7 @@ from unittest import TestCase
 from ..model_conversion import *
 from ..statespace import ss
 from ..transferfunction import tf
-import numpy as np
+from .tools.test_utility import assert_tf_equal
 
 
 class TestModelConversion(TestCase):
@@ -12,4 +12,4 @@ class TestModelConversion(TestCase):
         self.tf = tf([3, -9], [1, 4, -3])
 
     def test_ss2tf(self):
-        self.assertTrue(ss2tf(self.ss) == self.tf)
+        assert_tf_equal(ss2tf(self.ss), self.tf)

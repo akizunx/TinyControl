@@ -53,16 +53,6 @@ class TransferFunction(LinearTimeInvariant):
 
     __repr__ = __str__
 
-    def __eq__(self, other):
-        if not isinstance(other, TransferFunction):
-            return False
-
-        if not self.is_ctime and self.dt != other.dt:
-            return False
-
-        return np.all(np.isclose(other.num, self.num)) and \
-               np.all(np.isclose(other.den, self.den))
-
     def __neg__(self):
         num = -1 * self.num
         return TransferFunction(num, self.den, dt=self.dt)
