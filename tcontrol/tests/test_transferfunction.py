@@ -65,6 +65,7 @@ class TestTransferFunction(TestCase):
     def test_tf(self):
         assert_tf_equal(tf([1], [1, 0]), TransferFunction([1], [1, 0]))
         assert_tf_equal(tf(TransferFunction([1], [1, 0])), tf([1], [1, 0]))
+        assert_tf_equal(tf(num=[1], den=[1, 0]), tf([1], [1, 0]))
 
     def test_zpk(self):
         s1 = TransferFunction([5, 5], [1, 0, -4])
@@ -76,3 +77,5 @@ class TestTransferFunction(TestCase):
         self.assertRaises(TypeError, tf, [1, 3, 4, 5])
         self.assertRaises(WrongNumberOfArguments, tf, **{})
         self.assertRaises(WrongNumberOfArguments, tf, **{'num': [1]})
+        self.assertRaises(WrongNumberOfArguments, tf, **{'den': [1]})
+        self.assertRaises(WrongNumberOfArguments, tf, **{'num': [1], 'dt': 0.1})

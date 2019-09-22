@@ -243,12 +243,15 @@ def tf(*args, **kwargs):
         num = kwargs.get('num')
         den = kwargs.get('den')
         dt = kwargs.get('dt')
-        if num is None and den is None and dt is None:
-            raise WrongNumberOfArguments(f'1, 2 or 3 arg(s) expected. received {length}')
+        if num is None or den is None:
+            msg = f'cannot find num, den, [dt] in kwargs, ' \
+                  f'got num: {num}, den: {den}, dt: {dt}'
+            raise WrongNumberOfArguments(msg)
     else:
         raise WrongNumberOfArguments(f'1, 2 or 3 arg(s) expected. received {length}')
 
     return TransferFunction(num, den, dt=dt)
+
 
 def zpk(z, p, k):
     """
