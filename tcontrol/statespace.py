@@ -1,6 +1,6 @@
 from itertools import chain
 
-from tcontrol.lti import LinearTimeInvariant
+from .lti import LinearTimeInvariant, _pickup_dt
 from .exception import *
 import numpy as np
 from numpy.linalg import inv, matrix_power, matrix_rank, \
@@ -37,15 +37,6 @@ def _check_ss_matrix(A, B, C, D):
 
     if D.shape != (q, p):
         raise ValueError(f'shape of D should be ({q}, {p}), got {D.shape}')
-
-
-def _pick_dt(sys1, sys2):
-    if sys1.dt is None and sys2.dt is not None:
-        return sys2.dt
-    elif sys1.dt is not None and sys2.dt is None or sys1.dt == sys2.dt:
-        return sys1.dt
-    else:
-        raise ValueError("different sampling times")
 
 
 def _siso_zero(A, b, c, d):
@@ -183,7 +174,7 @@ class StateSpace(LinearTimeInvariant):
         C = np.concatenate((self.C, other.C), axis=1)
         D = self.D + other.D
 
-        dt = _pick_dt(self, other)
+        dt = _pickup_dt(self, other)
 
         return StateSpace(A, B, C, D, dt=dt)
 
@@ -214,7 +205,7 @@ class StateSpace(LinearTimeInvariant):
         C = np.concatenate((other.D @ self.C, other.C), axis=1)
         D = other.D @ self.D
 
-        dt = _pick_dt(self, other)
+        dt = _pickup_dt(self, other)
 
         return StateSpace(A, B, C, D, dt=dt)
 

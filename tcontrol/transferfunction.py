@@ -1,7 +1,7 @@
 import numbers
 from collections import Iterable
 
-from .lti import LinearTimeInvariant
+from .lti import LinearTimeInvariant, _pickup_dt
 from .exception import *
 import numpy as np
 import sympy as sym
@@ -117,7 +117,7 @@ class TransferFunction(LinearTimeInvariant):
         return super().parallel(*systems)
 
     def _parallel(self, other):
-        dt = _get_dt(self, other)
+        dt = _pickup_dt(self, other)
         if np.array_equal(self.den, other.den):
             den = self.den
             num = np.polyadd(self.num, other.num)
@@ -135,7 +135,7 @@ class TransferFunction(LinearTimeInvariant):
         num = np.convolve(self.num, other.num)
         den = np.convolve(self.den, other.den)
 
-        dt = _get_dt(self, other)
+        dt = _pickup_dt(self, other)
 
         return TransferFunction(num, den, dt=dt)
 
@@ -154,35 +154,13 @@ class TransferFunction(LinearTimeInvariant):
         if other == 1:
             other = TransferFunction([1], [1], dt=self.dt)
 
-        dt = _get_dt(self, other)
+        dt = _pickup_dt(self, other)
 
         num = np.convolve(self.num, other.den)
         den = np.polyadd(np.convolve(self.num, other.num),
                          np.convolve(self.den, other.den) * (-sign))
 
         return TransferFunction(num, den, dt=dt)
-
-
-def _get_dt(sys1, sys2):
-    """
-    Determine the sampling time of the new system.
-
-    :param sys1: the first system
-    :type sys1: TransferFunction
-    :param sys2: the second system
-    :type sys2: TransferFunction
-    :return: sampling time
-    :rtype: int | float
-    """
-    if sys1.dt == sys2.dt or (sys1.dt is not None and sys2.dt is None):
-        dt = sys1.dt
-    elif sys1.dt is None and sys2.dt is not None:
-        dt = sys2.dt
-    else:
-        raise ValueError(
-            'Expected the same sampling time. got sys1:{0} sys2:{1}'.format(sys1.dt,
-                                                                            sys2.dt))
-    return dt
 
 
 def _tf_to_symbol(num, den):

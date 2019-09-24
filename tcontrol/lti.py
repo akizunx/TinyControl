@@ -133,3 +133,22 @@ def isdtime(sys_, strict=False):
 
 def issiso(sys_):
     return sys_.outputs == 1 and sys_.inputs == 1
+
+def _pickup_dt(sys1, sys2):
+    """
+    Determine the sampling time of the new system.
+
+    :param sys1: the first system
+    :type sys1: TransferFunction
+    :param sys2: the second system
+    :type sys2: TransferFunction
+    :return: sampling time
+    :rtype: int | float
+    """
+    if sys1.dt is None and sys2.dt is not None:
+        return sys2.dt
+    elif sys1.dt is not None and sys2.dt is None or sys1.dt == sys2.dt:
+        return sys1.dt
+    else:
+        msg = f'Expected the same sampling time. got sys1:{sys1.dt} sys2:{sys2.dt}'
+        raise ValueError(msg)
