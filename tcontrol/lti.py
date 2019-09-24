@@ -35,7 +35,6 @@ Reference: https://github.com/python-control/python-control
 """
 import warnings
 
-
 __all__ = ['LinearTimeInvariant', 'isctime', 'isdtime', 'issiso']
 
 
@@ -53,6 +52,7 @@ class LinearTimeInvariant(object):
            is invalid.
     :type dt: int | float
     """
+
     def __init__(self, inputs=1, outputs=1, dt=None):
         self.inputs = inputs
         self.outputs = outputs
@@ -94,9 +94,25 @@ class LinearTimeInvariant(object):
         raise NotImplementedError('This should be implemented by subclass')
 
     def parallel(self, *args):
+        other = args[0]
+        parallel_system = self._parallel(other)
+        if args[1:]:
+            return parallel_system.parallel(*args[1:])
+        else:
+            return parallel_system
+
+    def _parallel(self, other):
         raise NotImplementedError('This should be implemented by subclass')
 
     def cascade(self, *args):
+        other = args[0]
+        serial_system = self._cascade(other)
+        if args[1:]:
+            return serial_system.cascade(*args[1:])
+        else:
+            return serial_system
+
+    def _cascade(self, other):
         raise NotImplementedError('This should be implemented by subclass')
 
     def feedback(self, *args, **kwargs):

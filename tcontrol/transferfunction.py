@@ -114,8 +114,9 @@ class TransferFunction(LinearTimeInvariant):
         return np.roots(self.num)
 
     def parallel(self, *systems):
-        other = systems[0]
+        return super().parallel(*systems)
 
+    def _parallel(self, other):
         dt = _get_dt(self, other)
         if np.array_equal(self.den, other.den):
             den = self.den
@@ -125,24 +126,18 @@ class TransferFunction(LinearTimeInvariant):
             num = np.polyadd(np.convolve(self.num, other.den),
                              np.convolve(other.num, self.den))
 
-        parallel_system = TransferFunction(num, den, dt=dt)
-        if systems[1:]:
-            return parallel_system.parallel(*systems[1:])
-        else:
-            return parallel_system
+        return TransferFunction(num, den, dt=dt)
 
     def cascade(self, *systems):
-        other = systems[0]
+        return super().cascade(*systems)
+
+    def _cascade(self, other):
         num = np.convolve(self.num, other.num)
         den = np.convolve(self.den, other.den)
 
         dt = _get_dt(self, other)
 
-        serial_system = TransferFunction(num, den, dt=dt)
-        if systems[1:]:
-            return serial_system.cascade(*systems[1:])
-        else:
-            return serial_system
+        return TransferFunction(num, den, dt=dt)
 
     def feedback(self, other=1, sign=-1):
         """

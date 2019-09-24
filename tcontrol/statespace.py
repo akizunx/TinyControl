@@ -3,7 +3,7 @@ from itertools import chain
 from tcontrol.lti import LinearTimeInvariant
 from .exception import *
 import numpy as np
-from numpy.linalg import inv, matrix_power, matrix_rank,\
+from numpy.linalg import inv, matrix_power, matrix_rank, \
     eigvals
 from scipy.linalg import eigvals
 import sympy as sym
@@ -167,7 +167,9 @@ class StateSpace(LinearTimeInvariant):
         :param systems: systems to be paralleled
         :return: the parallel system
         """
-        other = systems[0]
+        return super().parallel(*systems)
+
+    def _parallel(self, other):
         if other.D.shape != self.D.shape:
             msg = 'two parallel systems should have the same numbers of input and output, '
             raise ValueError(msg + f"got {self.D.shape}, {other.D.shape}")
@@ -183,11 +185,7 @@ class StateSpace(LinearTimeInvariant):
 
         dt = _pick_dt(self, other)
 
-        parallel_system = StateSpace(A, B, C, D, dt=dt)
-        if systems[1:]:
-            return parallel_system.parallel(*systems[1:])
-        else:
-            return parallel_system
+        return StateSpace(A, B, C, D, dt=dt)
 
     def cascade(self, *systems):
         """
@@ -201,7 +199,9 @@ class StateSpace(LinearTimeInvariant):
         :param systems: systems to be cascaded
         :return: the serial system
         """
-        other = systems[0]
+        return super().cascade(*systems)
+
+    def _cascade(self, other):
         if self.outputs != other.inputs:
             raise ValueError("outputs are not equal to inputs")
         n1 = self.A.shape[0]
@@ -216,11 +216,7 @@ class StateSpace(LinearTimeInvariant):
 
         dt = _pick_dt(self, other)
 
-        serial_system = StateSpace(A, B, C, D, dt=dt)
-        if systems[1:]:
-            return serial_system.cascade(*systems[1:])
-        else:
-            return serial_system
+        return StateSpace(A, B, C, D, dt=dt)
 
     def feedback(self, k, sign=-1):
         """
