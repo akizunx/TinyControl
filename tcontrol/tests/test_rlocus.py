@@ -6,8 +6,10 @@ from tcontrol.rlocus import rlocus
 import numpy as np
 
 path = pathlib.Path('.')
-path = (path / 'tcontrol/tests/rlocus_result.npz').resolve()
-
+if 'tests' not in str(path.cwd()):
+    path = (path / 'tcontrol/tests/rlocus_result.npz').resolve()
+else:
+    path = (path / 'rlocus_result.npz').resolve()
 
 class TestRlocus(TestCase):
     def test_rlocus(self):
