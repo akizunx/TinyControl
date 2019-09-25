@@ -413,8 +413,7 @@ class StateSpace(LinearTimeInvariant):
         return cls(sys_.A.T.copy(), sys_.C.T.copy(), sys_.B.T.copy(), sys_.D.T.copy(),
                    dt=sys_.dt)
 
-    @staticmethod
-    def lyapunov(sys_):
+    def lyapunov(self):
         """
         Solve the equation::
             continuous system: A.T * X + X * A = -I
@@ -431,22 +430,19 @@ class StateSpace(LinearTimeInvariant):
 
         P is a symmetric matrix.
 
-        :param sys_: system
-        :type sys_: StateSpace
-
         :return: the matrix X or None if there doesn't exist a solve
         :rtype: np.matrix | np.ndarray | None
         """
-        n = sys_.A.shape[0]
+        n = self.A.shape[0]
         eye = sym.eye(n)
         p = [[sym.Symbol((f'p_{i}{j}', f'p_{j}{i}')[i <= j]) for i in range(n)]
              for j in range(n)]
         P = sym.Matrix(p)
 
-        if sys_.is_ctime:
-            eq = sys_.A.T * P + P * sys_.A + eye
+        if self.is_ctime:
+            eq = self.A.T * P + P * self.A + eye
         else:
-            eq = sys_.A.T * P * sys_.A - P + eye
+            eq = self.A.T * P * self.A - P + eye
 
         p_set = sym.solve(eq, chain(*p))
         if not p_set:
@@ -504,7 +500,7 @@ def lyapunov(sys_):
     :return: the matrix X
     :rtype: np.matrix
     """
-    return StateSpace.lyapunov(sys_)
+    return sys_.lyapunov()
 
 
 def ss(*args, **kwargs):
