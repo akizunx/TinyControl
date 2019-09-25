@@ -95,6 +95,12 @@ class LinearTimeInvariant(object):
 
     def parallel(self, *args):
         other = args[0]
+        io_nums1 = (self.inputs, self.outputs)
+        io_nums2 = (other.inputs, other.outputs)
+        if io_nums1 != io_nums2:
+            msg = 'two parallel systems should have the same numbers of input and output,\n'
+            raise ValueError(msg + f"got {io_nums1}, {io_nums2}")
+
         parallel_system = self._parallel(other)
         if args[1:]:
             return parallel_system.parallel(*args[1:])
@@ -106,6 +112,9 @@ class LinearTimeInvariant(object):
 
     def cascade(self, *args):
         other = args[0]
+        if self.outputs != other.inputs:
+            raise ValueError("outputs are not equal to inputs")
+
         serial_system = self._cascade(other)
         if args[1:]:
             return serial_system.cascade(*args[1:])

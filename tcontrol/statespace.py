@@ -161,10 +161,6 @@ class StateSpace(LinearTimeInvariant):
         return super().parallel(*systems)
 
     def _parallel(self, other):
-        if other.D.shape != self.D.shape:
-            msg = 'two parallel systems should have the same numbers of input and output, '
-            raise ValueError(msg + f"got {self.D.shape}, {other.D.shape}")
-
         n1 = self.A.shape[0]
         n = n1 + other.A.shape[0]
         A = np.zeros((n, n))
@@ -193,8 +189,6 @@ class StateSpace(LinearTimeInvariant):
         return super().cascade(*systems)
 
     def _cascade(self, other):
-        if self.outputs != other.inputs:
-            raise ValueError("outputs are not equal to inputs")
         n1 = self.A.shape[0]
         n = n1 + other.A.shape[0]
         A = np.zeros((n, n))
