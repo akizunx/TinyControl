@@ -1,14 +1,14 @@
-from itertools import chain
+import warnings
 
 from .lti import LinearTimeInvariant, _pickup_dt
 from .exception import *
 import numpy as np
 from numpy.linalg import inv, matrix_power, matrix_rank, \
-    eigvals
-from scipy.linalg import eigvals
-import sympy as sym
+    eigvals, LinAlgError
+from scipy.linalg import eigvals, solve_sylvester, kron, \
+    schur, hessenberg
 
-__all__ = ["StateSpace", "ss", "lyapunov"]
+__all__ = ["StateSpace", "ss", "lyapunov", "discrete_lyapunov"]
 
 config = {'use_numpy_matrix': False}
 
@@ -413,7 +413,7 @@ class StateSpace(LinearTimeInvariant):
         return cls(sys_.A.T.copy(), sys_.C.T.copy(), sys_.B.T.copy(), sys_.D.T.copy(),
                    dt=sys_.dt)
 
-    def lyapunov(self):
+    def lyapunov(self, Q=None):
         """
         Solve the equation::
             continuous system: A.T * X + X * A = -I
@@ -433,27 +433,10 @@ class StateSpace(LinearTimeInvariant):
         :return: the matrix X or None if there doesn't exist a solve
         :rtype: np.matrix | np.ndarray | None
         """
-        n = self.A.shape[0]
-        eye = sym.eye(n)
-        p = [[sym.Symbol((f'p_{i}{j}', f'p_{j}{i}')[i <= j]) for i in range(n)]
-             for j in range(n)]
-        P = sym.Matrix(p)
-
         if self.is_ctime:
-            eq = self.A.T * P + P * self.A + eye
+            return lyapunov(self.A, Q)
         else:
-            eq = self.A.T * P * self.A - P + eye
-
-        p_set = sym.solve(eq, chain(*p))
-        if not p_set:
-            return None
-
-        P = P.evalf(subs=p_set)  # evaluate the matrix P
-        X = np.asarray(P.tolist(), dtype=float)
-        if config['use_numpy_matrix']:
-            return np.mat(X)
-        else:
-            return X
+            return discrete_lyapunov(self.A, Q)
 
 
 def place(A, B, poles):
@@ -471,36 +454,65 @@ def place(A, B, poles):
     :return: feedback matrix K
     :rtype: np.matrix
     """
-    A = np.mat(A)
-    B = np.mat(B)
-    C = np.zeros((1, A.shape[0]))
-    D = np.zeros((1, B.shape[1]))
-    system = StateSpace(A, B, C, D)
-    return system.place(poles)
+    if B.shape[1] == 1:
+        A = np.mat(A)
+        B = np.mat(B)
+        C = np.zeros((1, A.shape[0]))
+        D = np.zeros((1, B.shape[1]))
+        system = StateSpace(A, B, C, D)
+        return system.place(poles)
+    else:
+        pass
 
 
-def lyapunov(sys_):
+def lyapunov(A, Q=None):
     """
-    Solve the equation A.T * X + X * A = -I
+    Solve the equation A.T * X + X * A = -Q
+    default Q is set to I
 
-    Use sympy to generate a matrix like following one
-    ::
+    :param A: system matrix
+    :type A: np.ndarray | np.matrix | List[List]
+    :param Q: matrix
+    :type Q: np.ndarray | np.matrix
 
-        P = [p_00 p_01 ... p_0n]
-            [p_10 p_11 ... p_1n]
-            [p_20 p_21 ... p_2n]
-            [.... .... ... ....]
-            [p_n0 p_n1 ... p_nn]
-
-    In fact, P is a symmetric matrix
-
-    :param sys_: system
-    :type sys_: StateSpace
-
-    :return: the matrix X
-    :rtype: np.matrix
+    :return: the matrix X if there is a solution
+    :rtype: np.ndarray | None
     """
-    return sys_.lyapunov()
+    A = np.array(A)
+    if Q is None:
+        Q = np.eye(A.shape[0])
+    try:
+        X = solve_sylvester(A.T, A, -Q)
+        if config['use_numpy_matrix']:
+            return np.mat(X)
+        else:
+            return X
+    except LinAlgError:
+        return None
+
+
+def discrete_lyapunov(A, Q=None):
+    A = np.array(A)
+    if Q is None:
+        Q = np.eye(A.shape[0])
+    if A.shape[0] > 9:
+        warnings.warn('')
+    eye = np.eye(A.shape[0] ** 2)
+    Q = Q.reshape(-1).T
+    X = inv(eye - kron(A, A)) @ Q
+    X = X.reshape(A.shape)
+    if config['use_numpy_matrix']:
+        return np.mat(X)
+    else:
+        return X
+
+
+def _discrete_lyapunov(A, Q):
+    h, q = hessenberg(A, True)
+    t, z, *_ = schur(A)
+    w = q @ z
+    Q = w.T @ Q @ w
+    raise NotImplementedError
 
 
 def ss(*args, **kwargs):

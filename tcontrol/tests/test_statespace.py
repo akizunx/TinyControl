@@ -8,6 +8,7 @@ from ..model_conversion import *
 from ..exception import WrongNumberOfArguments
 from ..discretization import c2d
 
+
 class TestStateSpace(TestCase):
     def setUp(self):
         self.A = np.matrix([[0, 1], [-4, -0.5]])
@@ -68,11 +69,11 @@ class TestStateSpace(TestCase):
         s2 = ss(A_, B_, C_, D_)
         sys_ = s1.feedback(s2)
         ans_b = np.array([[0.497199047022938, 0.241439722567989],
-                         [0.00397672393087681, 0.227709022266958],
-                         [0.538296661406946, 0.149857420314700],
-                         [0.132223192796285, 0.0885007994366726],
-                         [0.293713307787898, 0.543698319397011],
-                         [-0.117388364568095, 0.367561733989439]])
+                          [0.00397672393087681, 0.227709022266958],
+                          [0.538296661406946, 0.149857420314700],
+                          [0.132223192796285, 0.0885007994366726],
+                          [0.293713307787898, 0.543698319397011],
+                          [-0.117388364568095, 0.367561733989439]])
         ans_d = np.array([[-0.192541214208884, 0.523103714748680],
                           [0.475954939644619, 0.118861134193000]])
 
@@ -136,11 +137,19 @@ class TestStateSpace(TestCase):
         error = np.abs(d_ss_.D - 1 / 3)
         self.assertTrue(np.all(np.less_equal(error, 1e-6)))
 
+    def test_place(self):
+        sys_ = ss([[0, 0, 0], [1, -6, 0], [0, 1, -12]], [[1], [0], [0]], [1, 0, 2], [0])
+        self.assertTrue(np.array_equal(sys_.place([-2, -1 + 1j, -1 - 1j]), [-14, 186, -1220]))
+
     def test_lyapunov(self):
         A = [[0, 1], [-2, -3]]
-        B = [[0], [1]]
-        C = [1, 0]
-        ss_ = StateSpace(A, B, C, 0)
-        self.assertTrue(np.array_equal(lyapunov(ss_), [[1.25, 0.25], [0.25, 0.25]]))
-        system = tf2ss(tf([0.5], [1, 1, 0]))
-        self.assertEqual(None, lyapunov(system))
+        self.assertTrue(np.allclose(lyapunov(A), [[1.25, 0.25], [0.25, 0.25]]))
+        A = [[-1, 1], [2, -3]]
+        self.assertTrue(np.allclose(lyapunov(A), [[1.75, 0.625], [0.625, 0.375]]))
+
+    def test_discrete_lyapunov(self):
+        A = [[-0.2, -0.2, 0.4], [0.5, 0, 1], [0, -0.4, -0.5]]
+        B = [[1.595998, 0.5665776, 0.00224935],
+             [0.5665776, 3.02730, -0.6620739],
+             [0.00224934, -0.662074, 1.62605]]
+        self.assertTrue(np.allclose(discrete_lyapunov(A), B))
