@@ -58,25 +58,6 @@ class LinearTimeInvariant(object):
         self.outputs = outputs
         self.dt = dt
 
-    def isctime(self, strict=False):
-        warnings.warn('isctime method is deprecated, use is_ctime property instead',
-                      DeprecationWarning)
-        if self.dt is None:
-            return False if strict else True
-        return self.dt == 0
-
-    def isdtime(self, strict):
-        warnings.warn('isdtime method is deprecated, use is_dtime property instead',
-                      DeprecationWarning)
-        if self.dt is None:
-            return False if strict else True
-        return self.dt > 0
-
-    def issiso(self):
-        warnings.warn('issiso method is deprecated, use is_siso property instead',
-                      DeprecationWarning)
-        return self.outputs == 1 and self.inputs == 1
-
     @property
     def is_ctime(self):
         return self.dt is None or self.dt == 0
