@@ -7,6 +7,7 @@ from tcontrol.transferfunction import *
 from ..model_conversion import *
 from ..exception import WrongNumberOfArguments
 from ..discretization import c2d
+from .tools.test_utility import assert_ss_equal
 
 
 class TestStateSpace(TestCase):
@@ -119,9 +120,7 @@ class TestStateSpace(TestCase):
     def test_tf2ss(self):
         # test continuous time
         ss_ = tf2ss(self.tf_)
-        self.assertTrue(np.all(ss_.A == self.A))
-        self.assertTrue(np.all(ss_.B == self.B))
-        self.assertTrue(np.all(ss_.C == self.C))
+        assert_ss_equal(ss_, self.ss_)
         self.assertRaises(TypeError, tf2ss, ss_)
 
         # test discrete time
@@ -139,7 +138,7 @@ class TestStateSpace(TestCase):
 
     def test_place(self):
         sys_ = ss([[0, 0, 0], [1, -6, 0], [0, 1, -12]], [[1], [0], [0]], [1, 0, 2], [0])
-        self.assertTrue(np.array_equal(sys_.place([-2, -1 + 1j, -1 - 1j]), [-14, 186, -1220]))
+        self.assertTrue(np.allclose(sys_.place([-2, -1 + 1j, -1 - 1j]), [-14, 186, -1220]))
 
     def test_lyapunov(self):
         A = [[0, 1], [-2, -3]]

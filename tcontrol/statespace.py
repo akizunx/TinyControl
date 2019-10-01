@@ -280,17 +280,6 @@ class StateSpace(LinearTimeInvariant):
         else:
             return cmat
 
-    def controllability(self):
-        """
-        Calculate and return the matrix [B A*B A^2*B ... A^(n-1)*B].
-
-        :return: the previous matrix
-        :rtype: np.matrix
-        """
-        import warnings
-        warnings.warn("controllability is deprecated, use ctrb_mat instead", DeprecationWarning)
-        return self.ctrb_mat()
-
     def to_controllable_form(self):
         M = inv(self.ctrb_mat())
         p = np.asarray(M[-1]).reshape(-1)
@@ -340,24 +329,6 @@ class StateSpace(LinearTimeInvariant):
             return np.mat(omat)
         else:
             return omat
-
-    def observability(self):
-        """
-        Calculate and return the matrix
-        ::
-
-            [C        ]
-            [C*A      ]
-            [C*A^2    ]
-            [   ...   ]
-            [C*A^(n-1)]
-
-        :return: the previous matrix
-        :rtype: np.matrix
-        """
-        import warnings
-        warnings.warn("observability is deprecated, use obsv_mat instead", DeprecationWarning)
-        return self.obsv_mat()
 
     def is_observable(self):
         """
