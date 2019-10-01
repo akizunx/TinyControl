@@ -20,38 +20,40 @@ def tf2ss(sys_):
         nump = np.poly1d(sys_.num)
         denp = np.poly1d(sys_.den)
     except AttributeError as e:
-        raise TypeError("TransferFunction expected got {0}".format(type(sys_))) from e
-    dt = sys_.dt
+        raise TypeError(f'TransferFunction expected got {type(sys_)}') from e
 
+    if not sys_.is_siso:
+        raise ValueError('tf2ss only for siso system right now.')
+
+    dt = sys_.dt
     if denp[denp.order] != 1:
         nump /= denp[denp.order]
         denp /= denp[denp.order]
-    q, r = nump/denp
+    q, r = nump / denp
     num = r.coeffs
     bn = q.coeffs
     den = denp.coeffs
-    D = np.matrix(bn)
+    D = np.atleast_2d(bn)
 
     if sys_.is_gain:
-        A = np.mat([[0]])
-        B = np.mat([[0]])
-        C = np.mat([[0]])
-        return StateSpace(A, B, C, D, dt=dt)
+        A = np.array([[0]])
+        B = np.array([[0]])
+        C = np.array([[0]])
     else:
         # generate matrix A
-        A = np.zeros((1, den.shape[0] - 2))
-        A = np.concatenate((A, np.eye(den.shape[0] - 2)), axis=0)
+        n = den.shape[0] - 1
+        A = np.zeros((n, n))
+        A[0: n - 1, 1:] = np.eye(n - 1)
         den = den[1:]
-        den = np.mat(den[::-1])
-        A = np.concatenate((A, -den.T), axis=1)
+        A[-1] = -den[::-1]
 
-        B = np.zeros(A.shape[0])
-        B[A.shape[0] - num.shape[0]:] = num
-        B = np.mat(B[::-1]).T
-        c = np.zeros(A.shape[0])
-        c[-1] = 1
-        C = np.mat(c)
-        return StateSpace(A.T, C.T, B.T, D, dt=dt)
+        B = np.zeros((n, 1))
+        B[-1] = 1
+
+        C = np.zeros((1, n))
+        C[0, 0: num.shape[0]] = num[::-1]
+
+    return StateSpace(A, B, C, D, dt=dt)
 
 
 def ss2tf(sys_):
@@ -76,7 +78,7 @@ def ss2tf(sys_):
     p = sys_.B.shape[1]
     q = sys_.C.shape[0]
 
-    cp = np.poly(sys_.A) # characteristic polynomial
+    cp = np.poly(sys_.A)  # characteristic polynomial
     I = np.eye(n)
     R = I
     E = np.empty((n, q * p))
