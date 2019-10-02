@@ -12,10 +12,10 @@ from .tools.test_utility import assert_ss_equal
 
 class TestStateSpace(TestCase):
     def setUp(self):
-        self.A = np.matrix([[0, 1], [-4, -0.5]])
-        self.B = np.matrix([[0.], [1.]])
-        self.C = np.matrix([[4., 0.]])
-        self.D = np.matrix([0.])
+        self.A = np.array([[0, 1], [-4, -0.5]])
+        self.B = np.array([[0.], [1.]])
+        self.C = np.array([[4., 0.]])
+        self.D = np.array([0.])
         self.tf_ = tf([4], [1, 0.5, 4])
         self.ss_ = StateSpace(self.A, self.B, self.C, self.D)
 

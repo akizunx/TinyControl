@@ -7,9 +7,9 @@ import numpy as np
 class TestTimeResponse(TestCase):
     def setUp(self):
         self.tf_ = tc.tf([5, 25, 30], [1, 6, 10, 8])
-        self.A = np.mat([[0, 1, 0], [0, 0, 1], [-8, -10, -6]])
-        self.B = np.mat([[0], [0], [1]])
-        self.C = np.mat([[30, 25, 5]])
+        self.A = np.array([[0, 1, 0], [0, 0, 1], [-8, -10, -6]])
+        self.B = np.array([[0], [0], [1]])
+        self.C = np.array([[30, 25, 5]])
         self.ss_ = tc.ss(self.A.T, self.C.T, self.B.T, 0)
 
         self.tf1 = tc.tf([1], [1, 1])

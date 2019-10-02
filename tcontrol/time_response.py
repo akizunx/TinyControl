@@ -59,7 +59,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
         raise NotImplementedError("not support MIMO system right now")  # TODO: finish it
 
     if init_cond is None:
-        init_cond = np.mat(np.zeros((d_sys_.A.shape[0], 1)))
+        init_cond = np.zeros((d_sys_.A.shape[0], 1))
     else:
         # check the shape of init_cond
         if init_cond.shape[0] != d_sys_.A.shape[0] or init_cond.shape[1] != 1:
