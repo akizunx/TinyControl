@@ -144,17 +144,20 @@ class StateSpace(LinearTimeInvariant):
         """
         Return the paralleled system according to given systems,
         as the following shows.
-                     _____
-                ----| sys1|----
-                |    -----     |
-                |    _____     |
-        u(t) --- ---| sys2|---- --- y(t)
-                |    -----     |
-                |      :       |
-                |      :       |
-                |    _____     |
-                ----| sysn|----
-                     -----
+        ::
+
+                         _____
+                    ----| sys1|----
+                    |    -----     |
+                    |    _____     |
+            u(t) --- ---| sys2|---- --- y(t)
+                    |    -----     |
+                    |      :       |
+                    |      :       |
+                    |    _____     |
+                    ----| sysn|----
+                         -----
+
         :param systems: systems to be paralleled
         :return: the parallel system
         """
@@ -178,10 +181,12 @@ class StateSpace(LinearTimeInvariant):
         """
         Cascade given system from self to the end of systems,
         as the following shows.
+        ::
 
-                _____    _____           _____
-        u(t)---| sys1|--| sys2|-- ... --| sysn|---y(t)
-                -----    -----           -----
+
+                    _____    _____           _____
+            u(t)---| sys1|--| sys2|-- ... --| sysn|---y(t)
+                    -----    -----           -----
 
         :param systems: systems to be cascaded
         :return: the serial system

@@ -75,6 +75,26 @@ class LinearTimeInvariant(object):
         raise NotImplementedError('This should be implemented by subclass')
 
     def parallel(self, *args):
+        """
+        Return the paralleled system according to given systems,
+        as the following shows.
+        ::
+
+                         _____
+                    ----| sys1|----
+                    |    -----     |
+                    |    _____     |
+            u(t) --- ---| sys2|---- --- y(t)
+                    |    -----     |
+                    |      :       |
+                    |      :       |
+                    |    _____     |
+                    ----| sysn|----
+                         -----
+
+        :param systems: systems to be paralleled
+        :return: the parallel system
+        """
         other = args[0]
         io_nums1 = (self.inputs, self.outputs)
         io_nums2 = (other.inputs, other.outputs)
@@ -92,6 +112,19 @@ class LinearTimeInvariant(object):
         raise NotImplementedError('This should be implemented by subclass')
 
     def cascade(self, *args):
+        """
+        Cascade given system from self to the end of systems,
+        as the following shows.
+        ::
+
+
+                    _____    _____           _____
+            u(t)---| sys1|--| sys2|-- ... --| sysn|---y(t)
+                    -----    -----           -----
+
+        :param systems: systems to be cascaded
+        :return: the serial system
+        """
         other = args[0]
         if self.outputs != other.inputs:
             raise ValueError("outputs are not equal to inputs")
