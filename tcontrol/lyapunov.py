@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 import numpy as np
 from numpy.linalg import inv
 from scipy.linalg import schur, hessenberg, solve_sylvester, LinAlgError
@@ -87,7 +89,10 @@ def discrete_lyapunov(A, Q=None):
 def _partition_mat(M):
     """
     partition the schur form matrix into several blocks,
-    then return the block slices
+    then return the block slices.
+
+    this function is inspired by ilayn/harold
+    https://github.com/ilayn/harold
 
     :param M: the schur form matrix
     :type M: np.ndarray
