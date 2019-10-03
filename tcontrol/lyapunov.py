@@ -1,14 +1,13 @@
 import numpy as np
 from numpy.linalg import inv
-from scipy.linalg import schur, hessenberg
-from scipy.linalg import solve_sylvester, LinAlgError
+from scipy.linalg import schur, hessenberg, solve_sylvester, LinAlgError
 
 from .statespace import config
 
 
 def lyapunov(A, Q=None):
     """
-    Solve the equation A.T * X + X * A = -Q
+    Solve the equation :math:`A^T X + X A = -Q`.
     default Q is set to I
 
     :param A: system matrix
@@ -23,6 +22,7 @@ def lyapunov(A, Q=None):
     if Q is None:
         Q = np.eye(A.shape[0])
     try:
+        # continuous lyapunov equation is a sylvester equation
         X = solve_sylvester(A.T, A, -Q)
         if config['use_numpy_matrix']:
             return np.mat(X)
@@ -33,11 +33,24 @@ def lyapunov(A, Q=None):
 
 
 def discrete_lyapunov(A, Q=None):
+    """
+    Solve the equation :math:`A^T X A + X = -Q`.
+    default Q is set to I
+
+    :param A: system matrix
+    :type A: np.ndarray | np.matrix | List[List]
+    :param Q: matrix
+    :type Q: np.ndarray | np.matrix
+
+    :return: the matrix X if there is a solution
+    :rtype: np.ndarray | None
+    """
     A = np.array(A)
     n = A.shape[0]
     if Q is None:
         Q = np.eye(n)
 
+    # matrix size is not greater than 2 x 2, use _mini_dlyap directly
     if n < 3:
         return _mini_dlyap(A.T, A, Q)
 
@@ -50,7 +63,17 @@ def discrete_lyapunov(A, Q=None):
     partition = _partition_mat(t)
     for row in partition:
         for p in row:
+            # =====================================================
+            # add previous result into Q
+            # e.g.
+            # X11 is already known, then solve X12.
+            # A11^T * X11 * A12 + A11^T * X12 * A22 - X12 = -Q
+            #
+            # let Q' = Q + A11^T * X11 * A12, get the new equation
+            # A11^T * X12 * A22 - X12 = -Q'
+            # =====================================================
             Q[p] += _prev_r(X, t)[p]
+
             i, j = p
             X[p] = _mini_dlyap(t[i, i], t[j, j], Q[p])
     X = w @ X @ w.T
@@ -61,7 +84,16 @@ def discrete_lyapunov(A, Q=None):
         return X
 
 
-def _partition_mat(M: np.ndarray):
+def _partition_mat(M):
+    """
+    partition the schur form matrix into several blocks,
+    then return the block slices
+
+    :param M: the schur form matrix
+    :type M: np.ndarray
+    :return: block indices
+    :rtype: List[List[Tuple[slice, slice]]]
+    """
     n = M.shape[0]
     i = 0
     diagnose_indices = []
@@ -84,12 +116,19 @@ def _partition_mat(M: np.ndarray):
 
 
 def _prev_r(X, A):
+    """
+    to calculate a certain part of X, such as :math:`X_{22}`,
+    which is related to the :math:`X_{11}`, :math:`X_{12}`and
+     :math:`X_{21}`. so calculate that in this function.
+
+    """
     return A.T @ X @ A
 
 
 def _mini_dlyap(Ak: np.ndarray, Al: np.ndarray, Q):
     """
-    solve :math:`Ak^T X Al - X = -Q`
+    solve :math:`A_k^T X A_l - X = -Q`
+    lower than 2 order
 
     :param Ak:
     :type Ak: np.ndarray
@@ -97,8 +136,8 @@ def _mini_dlyap(Ak: np.ndarray, Al: np.ndarray, Q):
     :type Al: np.ndarray
     :param Q:
     :type Q: np.ndarray | None
-    :return:
-    :rtype:
+    :return: the solution of the equation
+    :rtype: np.ndarray
     """
     Q = -Q
     if Ak.shape == Al.shape == (1, 1):
