@@ -1,14 +1,12 @@
-import warnings
-
 from .lti import LinearTimeInvariant, _pickup_dt
 from .exception import *
+from .lyapunov import *
 import numpy as np
 from numpy.linalg import inv, matrix_power, matrix_rank, \
-    eigvals, LinAlgError
-from scipy.linalg import eigvals, solve_sylvester, kron, \
-    schur, hessenberg
+    eigvals
+from scipy.linalg import eigvals
 
-__all__ = ["StateSpace", "ss", "lyapunov", "discrete_lyapunov"]
+__all__ = ["StateSpace", "ss"]
 
 config = {'use_numpy_matrix': False}
 
@@ -439,56 +437,6 @@ def place(A, B, poles):
         return system.place(poles)
     else:
         pass
-
-
-def lyapunov(A, Q=None):
-    """
-    Solve the equation A.T * X + X * A = -Q
-    default Q is set to I
-
-    :param A: system matrix
-    :type A: np.ndarray | np.matrix | List[List]
-    :param Q: matrix
-    :type Q: np.ndarray | np.matrix
-
-    :return: the matrix X if there is a solution
-    :rtype: np.ndarray | None
-    """
-    A = np.array(A)
-    if Q is None:
-        Q = np.eye(A.shape[0])
-    try:
-        X = solve_sylvester(A.T, A, -Q)
-        if config['use_numpy_matrix']:
-            return np.mat(X)
-        else:
-            return X
-    except LinAlgError:
-        return None
-
-
-def discrete_lyapunov(A, Q=None):
-    A = np.array(A)
-    if Q is None:
-        Q = np.eye(A.shape[0])
-    if A.shape[0] > 9:
-        warnings.warn('')
-    eye = np.eye(A.shape[0] ** 2)
-    Q = Q.reshape(-1).T
-    X = inv(eye - kron(A, A)) @ Q
-    X = X.reshape(A.shape)
-    if config['use_numpy_matrix']:
-        return np.mat(X)
-    else:
-        return X
-
-
-def _discrete_lyapunov(A, Q):
-    h, q = hessenberg(A, True)
-    t, z, *_ = schur(A)
-    w = q @ z
-    Q = w.T @ Q @ w
-    raise NotImplementedError
 
 
 def ss(*args, **kwargs):
