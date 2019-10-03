@@ -89,3 +89,11 @@ Discretization
 
 .. py:currentmodule:: tcontrol.discretization
 .. autofunction:: c2d
+
+
+Lyapunov Equation
+-----------------
+
+.. py:currentmodule:: tcontrol.lyapunov
+.. autofunction:: lyapunov
+.. autofunction:: discrete_lyapunov
