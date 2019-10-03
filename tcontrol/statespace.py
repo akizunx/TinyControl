@@ -1,3 +1,4 @@
+from .tcconfig import config
 from .lti import LinearTimeInvariant, _pickup_dt
 from .exception import *
 from .lyapunov import *
@@ -7,8 +8,6 @@ from numpy.linalg import inv, matrix_power, matrix_rank, \
 from scipy.linalg import eigvals
 
 __all__ = ["StateSpace", "ss"]
-
-config = {'use_numpy_matrix': False}
 
 
 def _check_ss_matrix(A, B, C, D):

@@ -1,10 +1,9 @@
 from typing import List, Tuple
 
+from .tcconfig import config
 import numpy as np
 from numpy.linalg import inv
 from scipy.linalg import schur, hessenberg, solve_sylvester, LinAlgError
-
-from .statespace import config
 
 __all__ = ['lyapunov', 'discrete_lyapunov']
 
