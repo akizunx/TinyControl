@@ -1,6 +1,8 @@
 import numpy as np
 from numpy.linalg import matrix_power, matrix_rank, inv
 
+__all__ = ['ctrb_mat', 'ctrb_index', 'ctrb_indices', 'ctrb_trans_mat']
+
 
 def _check_ab(A: np.ndarray, B: np.ndarray):
     if A.shape[0] != A.shape[1]:
@@ -71,7 +73,7 @@ def ctrb_trans_mat(A: np.ndarray, B: np.ndarray):
     _check_ab(A, B)
     if B.shape[1] == 1:
         T = np.empty(A.shape)
-        Qc = ctrb_mat(A, B)
+        Qc = inv(ctrb_mat(A, B))
         p = Qc[-1]
         for i in range(A.shape[0]):
             T[i] = p @ matrix_power(A, i)
