@@ -40,10 +40,8 @@ def ctrb_indices(A: np.ndarray, B: np.ndarray):
         Qc = ctrb_mat(A, B)
     except ValueError as e:
         raise ValueError('wrong shape of input matrices') from e
-    else:
-        Qc = _adjust_qc_order(Qc)
 
-    mat_indices = np.array([False for _ in range(Qc.shape[1])])
+    mat_indices = np.zeros(Qc.shape[1], dtype=np.bool)
     rank = 0
     n = A.shape[0]
     for i in range(Qc.shape[1]):
@@ -59,8 +57,8 @@ def ctrb_indices(A: np.ndarray, B: np.ndarray):
 
     controllability_indices = np.zeros(n)
     p = B.shape[1]
-    for i in range(n):
-        controllability_indices[i] = np.sum(mat_indices[i * p: i * p + p])
+    for i in range(p):
+        controllability_indices[i] = np.sum(mat_indices[i: n: p])
 
     return np.trim_zeros(controllability_indices).astype(np.int)
 
