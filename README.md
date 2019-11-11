@@ -1,6 +1,8 @@
 # TinyControl
 A Python lib for automatic control system analysis.
 
+[![Build Status](https://travis-ci.com/akizunx/TinyControl.svg?branch=master)](https://travis-ci.com/akizunx/TinyControl)
+
 __IMPORTANT__ 
 
 This project is quite __UNSTABLE__, __Do Not Use in Any Serious Work!__
