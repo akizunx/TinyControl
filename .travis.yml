@@ -1,10 +1,5 @@
 language: python
 
-dist: xenial
-
-services:
-  - xvfb
-
 python:
   - "3.6"
   - "3.7"
@@ -17,10 +12,10 @@ install:
   - pip install sympy
   - pip install nose2
   - pip install coverage
-  - pip install codecov
+  - pip install coveralls
 
 script:
   - nose2 --with-coverage
 
 after_success:
-  - codecov
+  - coveralls
