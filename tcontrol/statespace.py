@@ -2,6 +2,7 @@ from .tcconfig import config
 from .lti import LinearTimeInvariant, _pickup_dt
 from .exception import *
 from .lyapunov import *
+from .canonical import *
 import numpy as np
 from numpy.linalg import inv, matrix_power, matrix_rank, \
     eigvals
@@ -271,18 +272,29 @@ class StateSpace(LinearTimeInvariant):
         :return: the previous matrix
         :rtype: np.matrix | np.ndarray
         """
-        n = self.A.shape[0]
-        p = self.B.shape[1]
-        cmat = np.zeros((n, n * p))
-        for i in range(n):
-            cmat[:, i: i * p + p] = matrix_power(self.A, i) @ self.B
+        cmat = ctrb_mat(self.A, self.B)
 
         if config['use_numpy_matrix']:
             return np.mat(cmat)
         else:
             return cmat
 
+    def ctrb_trans_mat(self):
+        return ctrb_trans_mat(self.A, self.B)
+
+    def ctrb_form(self):
+        T = self.ctrb_trans_mat()
+        T_I = inv(T)
+        A = T @ self.A @ T_I
+        B = T @ self.B
+        C = self.C @ T_I
+
+        return StateSpace(A, B, C, self.D, dt=self.dt)
+
     def to_controllable_form(self):
+        import warnings
+
+        warnings.warn('this method is deprecated', DeprecationWarning)
         M = inv(self.ctrb_mat())
         p = np.asarray(M[-1]).reshape(-1)
         T = []

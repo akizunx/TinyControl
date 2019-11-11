@@ -1,7 +1,8 @@
 import numpy as np
 from numpy.linalg import matrix_power, matrix_rank, inv
 
-__all__ = ['ctrb_mat', 'ctrb_index', 'ctrb_indices', 'ctrb_trans_mat']
+__all__ = ['ctrb_mat', 'ctrb_index', 'ctrb_indices', 'ctrb_trans_mat',
+           'obsv_mat']
 
 
 def _check_ab(A: np.ndarray, B: np.ndarray):
@@ -9,6 +10,13 @@ def _check_ab(A: np.ndarray, B: np.ndarray):
         raise ValueError('matrix A should be square.')
     if B.shape[0] != A.shape[1]:
         raise ValueError('matrix B should have the same row number as matrix A')
+
+
+def _check_ac(A: np.ndarray, C: np.ndarray):
+    if A.shape[0] != A.shape[1]:
+        raise ValueError('matrix A should be square.')
+    if C.shape[1] != A.shape[1]:
+        raise ValueError('matrix C should have the same column number as matrix A')
 
 
 def ctrb_mat(A: np.ndarray, B: np.ndarray):
@@ -22,6 +30,11 @@ def ctrb_mat(A: np.ndarray, B: np.ndarray):
         q[:, i * p: i * p + p] = matrix_power(A, i) @ B
 
     return q
+
+
+def obsv_mat(A: np.ndarray, C: np.ndarray):
+    _check_ac(A, C)
+    return ctrb_mat(A.T, C.T).T
 
 
 def _adjust_qc_order(Qc):
@@ -63,8 +76,20 @@ def ctrb_indices(A: np.ndarray, B: np.ndarray):
     return np.trim_zeros(controllability_indices).astype(np.int)
 
 
+def _adjust_qo_order(Qo):
+    return _adjust_qc_order(Qo.T).T
+
+
+def obsv_indices(A: np.ndarray, C: np.ndarray):
+    return ctrb_indices(A.T, C.T)
+
+
 def ctrb_index(A: np.ndarray, B: np.ndarray):
     return np.max(ctrb_indices(A, B))
+
+
+def obsv_index(A: np.ndarray, C: np.ndarray):
+    return np.max(obsv_indices(A, C))
 
 
 def ctrb_trans_mat(A: np.ndarray, B: np.ndarray):
@@ -77,10 +102,10 @@ def ctrb_trans_mat(A: np.ndarray, B: np.ndarray):
             T[i] = p @ matrix_power(A, i)
         return T
     else:
-        return luenberger(A, B)
+        return luenberger_ctrb_trans_mat(A, B)
 
 
-def luenberger(A: np.ndarray, B: np.ndarray):
+def luenberger_ctrb_trans_mat(A: np.ndarray, B: np.ndarray):
     Qc = ctrb_mat(A, B)
     indices = ctrb_indices(A, B)
     Qc = _adjust_qc_order(Qc)
