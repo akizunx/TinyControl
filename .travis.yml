@@ -16,6 +16,11 @@ install:
   - pip install matplotlib
   - pip install sympy
   - pip install nose2
+  - pip install coverage
+  - pip install codecov
 
 script:
-  - nose2
+  - nose2 --with-coverage
+
+after_success:
+  - codecov
