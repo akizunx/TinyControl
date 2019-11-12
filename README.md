@@ -2,6 +2,8 @@
 A Python lib for automatic control system analysis.
 
 [![Build Status](https://travis-ci.com/akizunx/TinyControl.svg?branch=master)](https://travis-ci.com/akizunx/TinyControl)
+[![Coverage Status](https://coveralls.io/repos/github/akizunx/TinyControl/badge.svg?branch=master)](https://coveralls.io/github/akizunx/TinyControl?branch=master)
+[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 __IMPORTANT__ 
 
