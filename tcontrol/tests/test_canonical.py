@@ -35,3 +35,15 @@ class TestCanonical(unittest.TestCase):
         B = np.array([[2, 0], [0, 0], [1, 1]])
         T = np.array([[0, -1, 0], [0, -6, 1], [-0.5, 3, 1]])
         assert_array_almost_equal(T, ctrb_trans_mat(A, B))
+
+    def test_obsv_mat(self):
+        Q = np.array([[1, 1, -0.5], [2, 0, 1],
+                      [1.5, -2.5, 3], [1, 9, 2, ],
+                      [-1.5, 23, -3.5], [-1, -6, 19]])
+        assert_array_almost_equal(Q, obsv_mat(self.A, self.C))
+
+    def test_obsv_indices(self):
+        assert_array_equal(obsv_indices(self.A, self.C), [2, 1])
+
+    def test_obsv_index(self):
+        self.assertEqual(obsv_index(self.A, self.C), 2)

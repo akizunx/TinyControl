@@ -2,7 +2,7 @@ import numpy as np
 from numpy.linalg import matrix_power, matrix_rank, inv
 
 __all__ = ['ctrb_mat', 'ctrb_index', 'ctrb_indices', 'ctrb_trans_mat',
-           'obsv_mat']
+           'obsv_mat', 'obsv_indices', 'obsv_index']
 
 
 def _check_ab(A: np.ndarray, B: np.ndarray):
