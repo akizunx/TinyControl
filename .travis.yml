@@ -1,0 +1,21 @@
+language: python
+
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
+
+install:
+  - pip install numpy
+  - pip install scipy
+  - pip install matplotlib
+  - pip install sympy
+  - pip install nose2
+  - pip install coverage
+  - pip install coveralls
+
+script:
+  - nose2 -C --coverage tcontrol
+
+after_success:
+  - coveralls
