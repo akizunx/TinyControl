@@ -6,6 +6,7 @@ from typing import List
 from .canonical import ctrb_mat, ctrb_indices, ctrb_trans_mat
 import numpy as np
 from numpy.linalg import inv, matrix_rank
+from numpy.polynomial.polynomial import polycompanion
 
 __all__ = ['place']
 
@@ -56,9 +57,7 @@ def _mi_place(A, B, poles):
     Ac = T @ A @ inv(T)
     Bc = T @ B
 
-    Ac_tilde = np.zeros(A.shape)
-    Ac_tilde[-1] = -1 * np.flip(np.poly(poles)[1:])
-    Ac_tilde[0: n - 1, 1:] = np.eye(n - 1)
+    Ac_tilde = polycompanion(np.flip(np.poly(poles))).T
 
     r = -1
     indices = ctrb_indices(A, B)

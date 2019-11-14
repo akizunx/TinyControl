@@ -2,6 +2,7 @@ from .transferfunction import TransferFunction
 from .statespace import StateSpace
 
 import numpy as np
+from numpy.polynomial.polynomial import polycompanion
 
 __all__ = ['tf2ss', 'ss2tf']
 
@@ -42,10 +43,7 @@ def tf2ss(sys_):
     else:
         # generate matrix A
         n = den.shape[0] - 1
-        A = np.zeros((n, n))
-        A[0: n - 1, 1:] = np.eye(n - 1)
-        den = den[1:]
-        A[-1] = -den[::-1]
+        A = polycompanion(den[::-1]).T
 
         B = np.zeros((n, 1))
         B[-1] = 1
