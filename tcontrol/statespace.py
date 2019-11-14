@@ -6,7 +6,7 @@ from .canonical import *
 from .fsf import *
 import numpy as np
 from numpy.linalg import inv, matrix_power, matrix_rank, \
-    eigvals
+    eigvals, LinAlgError
 from scipy.linalg import eigvals
 
 __all__ = ["StateSpace", "ss"]
@@ -244,6 +244,22 @@ class StateSpace(LinearTimeInvariant):
         D = self.D + signed_D1 @ F_inv_D2_D1
 
         return StateSpace(A, B, C, D)
+
+    def evalfr(self, frequency):
+        """
+        C * (frequency * I - A )^(-1) * B + D
+
+        :param frequency: the frequency
+        :type frequency: complex
+        :return:
+        :rtype:
+        """
+        try:
+            return (self.C @
+                    inv(frequency * np.eye(self.A.shape[0]) - self.A) @
+                    self.B + self.D)[0, 0]
+        except LinAlgError:
+            return float('inf')
 
     def pole(self):
         """

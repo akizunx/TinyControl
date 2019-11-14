@@ -74,6 +74,13 @@ class LinearTimeInvariant(object):
     def is_gain(self):
         raise NotImplementedError('This should be implemented by subclass')
 
+    @property
+    def dc_gain(self):
+        return self.evalfr(0)
+
+    def evalfr(self, frequency):
+        raise NotImplementedError('This should be implemented by subclass')
+
     def parallel(self, *args):
         """
         Return the paralleled system according to given systems,

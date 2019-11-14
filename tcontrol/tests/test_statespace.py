@@ -81,6 +81,9 @@ class TestStateSpace(TestCase):
         self.assertTrue(np.all(np.less_equal(np.abs(sys_.B - ans_b), 1e-6)))
         self.assertTrue(np.all(np.less_equal(np.abs(sys_.D - ans_d), 1e-6)))
 
+    def test_gc_gain(self):
+        print(ss([[0, 1], [0, -1]], [[0], [1]], [2, 1], 0).dc_gain)
+
     def test_pole(self):
         self.assertTrue(np.array_equal(self.ss_.pole(), ss2tf(self.ss_).pole()))
 

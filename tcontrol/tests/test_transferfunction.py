@@ -52,6 +52,9 @@ class TestTransferFunction(TestCase):
     def test___sub__(self):
         assert_tf_equal(self.s1 - self.s8, self.s9)
 
+    def test_dc_gain(self):
+        print(tf([1, 2], [1, 1, 0]).dc_gain)
+
     def test_pole(self):
         s = TransferFunction([1, 2], [1, 2, 1])
         assert_array_almost_equal(s.pole(), [-1, -1])

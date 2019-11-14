@@ -1,6 +1,8 @@
 import math
+from functools import singledispatch
 
 from tcontrol.transferfunction import TransferFunction, LinearTimeInvariant
+from .statespace import StateSpace
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -124,3 +126,19 @@ def bode(sys_, omega=None, *, plot=True):
         plt.show()
 
     return A, phi, omega
+
+
+@singledispatch
+def evalfr(system, frequency):
+    msg = f'expected TransferFunction or StateSpace, got{type(system)}'
+    raise TypeError(msg)
+
+
+@evalfr.register(TransferFunction)
+def _tf_evalfr(system, frequency):
+    return system.evalfr(frequency)
+
+
+@evalfr.register(StateSpace)
+def _ss_evalfr(system, frequency):
+    return system.evalfr(frequency)

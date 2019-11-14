@@ -1,5 +1,6 @@
 import numbers
 from collections import Iterable
+import warnings
 
 from .lti import LinearTimeInvariant, _pickup_dt
 from .exception import *
@@ -94,6 +95,10 @@ class TransferFunction(LinearTimeInvariant):
     @property
     def is_gain(self):
         return np.poly1d(self.num).order == np.poly1d(self.den).order == 0
+
+    def evalfr(self, frequency):
+        with np.errstate(divide='ignore'):
+            return  np.polyval(self.num, frequency) / np.polyval(self.den, frequency)
 
     def pole(self):
         """
