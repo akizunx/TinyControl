@@ -47,7 +47,7 @@ def _si_place(A, B, poles):
     k = np.poly(poles) - np.poly(A)
     k = k[1:]
     T = ctrb_trans_mat(A, B)
-    return np.matmul(k[::-1], inv(T))
+    return np.matmul(k[::-1], T)
 
 
 def _mi_place(A, B, poles):
