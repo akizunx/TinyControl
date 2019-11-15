@@ -85,7 +85,12 @@ def _is_dt_validated(sys_: Union[TransferFunction, StateSpace],
 
 @singledispatch
 def _setup_control_signal(input_signal, t):
-    raise TypeError("Wrong type is given.")
+    raise TypeError(f"Given type {type(input_signal)} is invalid.")
+
+
+@_setup_control_signal.register(numbers.Real)
+def f(input_signal, t):
+    return np.zeros(t.shape) + input_signal
 
 
 @_setup_control_signal.register(np.ndarray)
