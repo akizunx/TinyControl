@@ -5,7 +5,7 @@ from typing import Union, Tuple
 
 from .transferfunction import TransferFunction
 from .statespace import StateSpace
-from .plot_utility import _plot_response_curve
+from .plot_utility import plot_response_curve
 from .discretization import c2d
 from .model_conversion import tf2ss
 import numpy as np
@@ -142,7 +142,7 @@ def step(sys_, t=None, *, plot=True):
     u = np.ones(t.shape, dtype=int)
     y, t = _any_input(sys_, t, u)
     if plot:
-        _plot_response_curve(y, t, "step response", sys_.is_ctime)
+        plot_response_curve(y, t, "step response", sys_.is_ctime)
     return y, t
 
 
@@ -168,7 +168,7 @@ def impulse(sys_, t=None, *, plot=True, **kwargs):
 
     y, t = _any_input(sys_, t, u, x0)
     if plot:
-        _plot_response_curve(y, t, "impulse response", sys_.is_ctime)
+        plot_response_curve(y, t, "impulse response", sys_.is_ctime)
     return y, t
 
 
@@ -187,7 +187,7 @@ def ramp(sys_, t=None, *, plot=True):
     u = t
     y, t = _any_input(sys_, t, u)
     if plot:
-        _plot_response_curve(y, t, "impulse response", sys_.is_ctime)
+        plot_response_curve(y, t, "impulse response", sys_.is_ctime)
     return y, t
 
 
@@ -214,7 +214,7 @@ def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
 
     y, t = _any_input(sys_, t, input_signal, init_cond)
     if plot:
-        _plot_response_curve(y, t, "response", sys_.is_ctime)
+        plot_response_curve(y, t, "response", sys_.is_ctime)
     return y, t
 
 

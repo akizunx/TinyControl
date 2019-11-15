@@ -1,7 +1,6 @@
+from tcontrol.plot_utility import plot_pzmap
 from tcontrol.transferfunction import TransferFunction
 from tcontrol.lti import LinearTimeInvariant as LTI
-from matplotlib import pyplot as plt
-import numpy as np
 
 __all__ = ["pzmap"]
 
@@ -36,27 +35,6 @@ def pzmap(sys_, title='pole-zero map', *, plot=True):
     pole = sys_.pole()
 
     if plot:
-        if sys_.is_dtime:
-            x = np.linspace(-1, 1, 100)
-            y = np.sqrt(1 - x**2)
-            plt.plot(x, y, '--', color='#929591')
-            plt.plot(x, -y, '--',color='#929591')
-
-        if zero.shape[0]:
-            l1 = plt.scatter(np.real(zero), np.imag(zero), s=30, marker='o',
-                             color='#069af3')
-            plt.legend([l1], ['zero'])
-        if pole.shape[0]:
-            l2 = plt.scatter(np.real(pole), np.imag(pole), s=30, marker='x',
-                             color='#fdaa48')
-            plt.legend([l2], ['pole'])
-
-        plt.grid()
-        plt.axvline(x=0, color='black')
-        plt.axhline(y=0, color='black')
-        plt.xlabel('Real Axis')
-        plt.ylabel('Imag Axis')
-        plt.title(title)
-        plt.show()
+        plot_pzmap(pole, sys_, title, zero)
 
     return pole, zero
