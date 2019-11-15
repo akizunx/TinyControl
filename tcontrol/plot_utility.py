@@ -1,12 +1,13 @@
 import math
 
+import matplotlib.widgets as widgets
 import numpy as np
 from matplotlib import pyplot as plt
-import matplotlib.widgets as widgets
 
 from tcontrol import pzmap
 
-__all__ = ['grid', 'figure', 'show', "AnnotatedPoint", "AttachedCursor"]
+__all__ = ['grid', 'figure', 'show', "AnnotatedPoint", "AttachedCursor",
+           'plot_nyquist', 'plot_response_curve', 'plot_bode', 'plot_pzmap', 'plot_rlocus']
 
 
 def show(*args, **kwargs):

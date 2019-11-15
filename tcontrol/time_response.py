@@ -1,21 +1,22 @@
 from functools import singledispatch
-import warnings
 import numbers
+import warnings
 from typing import Union, Tuple
 
-from .transferfunction import TransferFunction
-from .statespace import StateSpace
-from .plot_utility import plot_response_curve
-from .discretization import c2d
-from .model_conversion import tf2ss
 import numpy as np
 from numpy.linalg import eigvals
+
+from .discretization import c2d
+from .model_conversion import tf2ss
+from .plot_utility import plot_response_curve
+from .statespace import StateSpace
+from .transferfunction import TransferFunction
 
 __all__ = ['impulse', 'step', 'ramp', 'any_input']
 
 
 # convert system to state space then get result
-def _any_input(sys_, t, input_signal=0, init_cond=None):
+def _any_input(sys_, t, input_signal, init_cond=None):
     """
     Accept any input signal, then calculate the response of the system.
 
@@ -24,7 +25,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
     :param t: time
     :type t: np.ndarray
     :param input_signal: input signal accepted by the system
-    :type input_signal: numbers.Real | np.ndarray
+    :type input_signal: np.ndarray
     :param init_cond: initial condition of the system
     :type init_cond: None | numbers.Real | np.ndarray
 
@@ -52,11 +53,7 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
             raise ValueError('The step of time vector didn\'t match the sample time of '
                              'the system.')
 
-    # check the input_signal validity
-    if d_sys_.is_siso:
-        u = _setup_control_signal(input_signal, t)
-    else:
-        raise NotImplementedError("not support MIMO system right now")  # TODO: finish it
+    u = input_signal
 
     if init_cond is None:
         init_cond = np.zeros((d_sys_.A.shape[0], 1))
@@ -65,11 +62,11 @@ def _any_input(sys_, t, input_signal=0, init_cond=None):
         if init_cond.shape[0] != d_sys_.A.shape[0] or init_cond.shape[1] != 1:
             raise ValueError("wrong dimension of init condition")
 
-    x = _cal_x(d_sys_.A, d_sys_.B, len(t[1:]), init_cond, u)
-    y = _cal_y(d_sys_.C, d_sys_.D, len(x), x, u)
+    x = _cal_x(d_sys_.A, d_sys_.B, t.size, init_cond, u)
+    y = _cal_y(d_sys_.C, d_sys_.D, x.shape[1], x, u)
 
     if sys_.is_siso:
-        y = np.asarray(y).reshape(-1)
+        return y.reshape(-1), t
     else:
         y = [np.asarray(_).reshape(-1) for _ in y]
     return np.array(y), t
@@ -83,41 +80,15 @@ def _is_dt_validated(sys_: Union[TransferFunction, StateSpace],
         return False
 
 
-@singledispatch
-def _setup_control_signal(input_signal, t):
-    raise TypeError(f"Given type {type(input_signal)} is invalid.")
-
-
-@_setup_control_signal.register(numbers.Real)
-def f(input_signal, t):
-    return np.zeros(t.shape) + input_signal
-
-
-@_setup_control_signal.register(np.ndarray)
-def f(input_signal, t):
-    if input_signal.shape == t.shape:
-        u = input_signal
-    else:
-        raise ValueError("The input signal should have the same shape with t.")
-    return u
-
-
-@_setup_control_signal.register(list)
-def f(input_signal, t):
-    u = np.array(input_signal)
-    if u.shape != t.shape:
-        raise ValueError("The input signal should have the same shape with t")
-    return u
-
-
 def _cal_x(G, H, n, x_0, u):
     """
     calculate x step by step
     """
-    x = [x_0]
-    for i in range(n):
-        x_k = G @ x[i] + np.dot(H, u[i])
-        x.append(x_k)
+    x = np.empty((G.shape[0], n))
+    x[:, 0: 1] = x_0
+    for i in range(n - 1):
+        x_k = G @ x[:, i: i + 1] + H @ u[:, i: i + 1]
+        x[:, i + 1: i + 2] = x_k
     return x
 
 
@@ -125,10 +96,10 @@ def _cal_y(C, D, n, x, u):
     """
     calculate system output
     """
-    y = []
+    y = np.empty((C.shape[0], n))
     for i in range(n):
-        y_k = C @ x[i] + np.dot(D, u[i])
-        y.append(y_k)
+        y_k = C @ x[:, i: i + 1] + D @ u[:, i: i + 1]
+        y[:, i: i + 1] = y_k
     return y
 
 
@@ -145,7 +116,7 @@ def step(sys_, t=None, *, plot=True):
         t = _setup_time_vector(sys_)
 
     u = np.ones(t.shape, dtype=int)
-    y, t = _any_input(sys_, t, u)
+    y, t = any_input(sys_, t, u, plot=False)
     if plot:
         plot_response_curve(y, t, "step response", sys_.is_ctime)
     return y, t
@@ -171,7 +142,7 @@ def impulse(sys_, t=None, *, plot=True, **kwargs):
     else:
         x0 = sys_.B * K if x0 is None else x0 + sys_.B * K
 
-    y, t = _any_input(sys_, t, u, x0)
+    y, t = any_input(sys_, t, u, x0, plot=False)
     if plot:
         plot_response_curve(y, t, "impulse response", sys_.is_ctime)
     return y, t
@@ -190,7 +161,7 @@ def ramp(sys_, t=None, *, plot=True):
         t = _setup_time_vector(sys_)
 
     u = t
-    y, t = _any_input(sys_, t, u)
+    y, t = any_input(sys_, t, u, plot=False)
     if plot:
         plot_response_curve(y, t, "impulse response", sys_.is_ctime)
     return y, t
@@ -217,10 +188,36 @@ def any_input(sys_, t, input_signal=0, init_cond=None, *, plot=True):
     if isinstance(sys_, TransferFunction):
         sys_ = tf2ss(sys_)
 
-    y, t = _any_input(sys_, t, input_signal, init_cond)
+    u = _setup_input_signal(input_signal, t, sys_.inputs)
+    y, t = _any_input(sys_, t, u, init_cond)
     if plot:
         plot_response_curve(y, t, "response", sys_.is_ctime)
     return y, t
+
+
+@singledispatch
+def _setup_input_signal(input_signal, t, input_number):
+    raise TypeError
+
+
+@_setup_input_signal.register(np.ndarray)
+def fn(input_signal, t, input_number):
+    input_signal = np.atleast_2d(input_signal)
+    if input_signal.shape[1] != t.size:
+        raise ValueError('The input signal length doesn\'t match the time series.')
+
+    if input_number > input_signal.shape[0] == 1:
+        return np.repeat(input_signal, input_number, axis=0)
+    elif input_number == input_signal.shape[0]:
+        return input_signal
+    else:
+        raise ValueError('The input signal doesn\'t match the input channel number.')
+
+
+@_setup_input_signal.register(numbers.Real)
+def fn(input_signal, t, input_number):
+    input_signal = np.zeros((1, t.size)) + input_signal
+    return np.repeat(input_signal, input_number, axis=0)
 
 
 def _setup_time_vector(sys_: StateSpace, n=1000):
