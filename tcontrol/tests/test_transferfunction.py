@@ -53,7 +53,7 @@ class TestTransferFunction(TestCase):
         assert_tf_equal(self.s1 - self.s8, self.s9)
 
     def test_dc_gain(self):
-        print(tf([1, 2], [1, 1, 0]).dc_gain)
+        self.assertEqual(tf([1, 2], [1, 1, 0]).dc_gain, float('inf'))
 
     def test_pole(self):
         s = TransferFunction([1, 2], [1, 2, 1])
