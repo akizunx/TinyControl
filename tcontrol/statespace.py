@@ -324,6 +324,7 @@ class StateSpace(LinearTimeInvariant):
         T = inv(T)
         return T
 
+    @property
     def is_controllable(self):
         """
         Return the rank of the controllability matrix.
@@ -361,6 +362,7 @@ class StateSpace(LinearTimeInvariant):
         else:
             return omat
 
+    @property
     def is_observable(self):
         """
 
