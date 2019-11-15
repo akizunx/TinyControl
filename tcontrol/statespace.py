@@ -5,7 +5,7 @@ from .lyapunov import *
 from .canonical import *
 from .fsf import *
 import numpy as np
-from numpy.linalg import inv, matrix_power, matrix_rank, \
+from numpy.linalg import inv, matrix_rank, \
     eigvals, LinAlgError
 from scipy.linalg import eigvals
 
@@ -335,11 +335,7 @@ class StateSpace(LinearTimeInvariant):
         :return: the previous matrix
         :rtype: np.matrix | np.ndarray
         """
-        n = self.A.shape[0]
-        q = self.C.shape[0]
-        omat = np.zeros((n * q, n))
-        for i in range(n):
-            omat[i: i * q + q, :] = self.C @ matrix_power(self.A, i)
+        omat = obsv_mat(self.A, self.C)
 
         if config['use_numpy_matrix']:
             return np.mat(omat)
