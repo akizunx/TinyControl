@@ -308,22 +308,6 @@ class StateSpace(LinearTimeInvariant):
 
         return StateSpace(A, B, C, self.D, dt=self.dt)
 
-    def to_controllable_form(self):
-        import warnings
-
-        warnings.warn('this method is deprecated', DeprecationWarning)
-        M = inv(self.ctrb_mat())
-        p = np.asarray(M[-1]).reshape(-1)
-        T = []
-        for i in range(self.A.shape[0]):
-            T.append(np.asarray(p @ matrix_power(self.A, i)).reshape(-1))
-        if config['use_numpy_matrix']:
-            T = np.mat(T)
-        else:
-            T = np.array(T)
-        T = inv(T)
-        return T
-
     @property
     def is_controllable(self):
         """

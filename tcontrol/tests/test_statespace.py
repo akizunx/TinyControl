@@ -91,28 +91,19 @@ class TestStateSpace(TestCase):
         pass
 
     def test_is_controllable(self):
-        self.assertTrue(self.ss_.is_controllable())
+        self.assertTrue(self.ss_.is_controllable)
 
     def test_observability(self):
         self.assertTrue(np.array_equal(self.ss_.obsv_mat(), [[4, 0], [0, 4]]))
 
     def test_is_observable(self):
-        self.assertTrue(self.ss_.is_observable())
+        self.assertTrue(self.ss_.is_observable)
 
     def test_dual_system(self):
         _ = StateSpace.dual_system(self.ss_)
         self.assertTrue(np.all(np.equal(_.A.T, self.ss_.A)))
         self.assertTrue(np.all(np.equal(_.C.T, self.ss_.B)))
         self.assertTrue(np.all(np.equal(_.B.T, self.ss_.C)))
-
-    def test_to_controllable_form(self):
-        T = self.ss_.to_controllable_form()
-        A = inv(T) @ self.A @ T
-        B = inv(T) @ self.B
-        C = self.C @ T
-        ss_1 = StateSpace(A, B, C, 0)
-        ss_2 = StateSpace([[0, 1], [-4, -.5]], [[0], [1]], [4, 0], 0)
-        self.assertEqual(ss_1, ss_2)
 
     def test_ss(self):
         self.assertEqual(ss(self.A, self.B, self.C, self.D), self.ss_)
