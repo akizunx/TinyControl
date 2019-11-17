@@ -33,9 +33,8 @@ OF THE POSSIBILITY OF SUCH DAMAGE.
 This module is modified from python-control.
 Reference: https://github.com/python-control/python-control
 """
-import warnings
 
-__all__ = ['LinearTimeInvariant', 'isctime', 'isdtime', 'issiso']
+__all__ = ['LinearTimeInvariant']
 
 
 class LinearTimeInvariant(object):
@@ -148,21 +147,6 @@ class LinearTimeInvariant(object):
     def feedback(self, *args, **kwargs):
         raise NotImplementedError('This should be implemented by subclass')
 
-
-def isctime(sys_, strict=False):
-    if sys_.dt is None:
-        return False if strict else True
-    return sys_.dt == 0
-
-
-def isdtime(sys_, strict=False):
-    if sys_.dt is None:
-        return False if strict else True
-    return sys_.dt > 0
-
-
-def issiso(sys_):
-    return sys_.outputs == 1 and sys_.inputs == 1
 
 def _pickup_dt(sys1, sys2):
     """
