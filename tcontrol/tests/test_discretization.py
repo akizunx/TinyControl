@@ -3,7 +3,9 @@ from unittest import TestCase
 from tcontrol.discretization import c2d
 from ..transferfunction import tf
 from ..model_conversion import *
+from ..statespace import StateSpace
 import numpy as np
+from .tools.test_utility import assert_ss_equal
 
 
 class TestDiscretization(TestCase):
@@ -15,6 +17,13 @@ class TestDiscretization(TestCase):
     def test_c2d_zoh(self):
         d_sys = c2d(self.s1, 1, 'zoh')
         self.assertLessEqual(np.max(np.abs(d_sys.num - self.zoh.num)), 1e-4)
+
+    def test_c2d_foh(self):
+        a = c2d(self.ss, 1, 'foh')
+        b = StateSpace([[0.540302, 0.841471], [-0.841471, 0.540302]],
+                       [[0.773644], [0.49675]],
+                       [[1, 0]], [[0.158529]], dt=1)
+        assert_ss_equal(a, b)
 
     def test_c2d_tustin(self):
         d_sys = c2d(self.s1, 1, 'tustin')

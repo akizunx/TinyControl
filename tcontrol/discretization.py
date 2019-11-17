@@ -1,14 +1,16 @@
-from functools import singledispatch
-import numbers
-from typing import Tuple
 import math
+import numbers
+from functools import singledispatch
+from typing import Tuple
 
-from .transferfunction import TransferFunction
-from .statespace import StateSpace
-from .exception import WrongSampleTime, UnknownDiscretizationMethod
-from .model_conversion import *
 import numpy as np
 from numpy.linalg import inv
+from scipy.linalg import expm
+
+from .exception import WrongSampleTime, UnknownDiscretizationMethod
+from .model_conversion import *
+from .statespace import StateSpace
+from .transferfunction import TransferFunction
 
 __all__ = ['c2d']
 
@@ -29,6 +31,21 @@ def _zoh(sys_: StateSpace, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
     H *= sample_time
     H = H @ sys_.B
     return G, H, sys_.C.copy(), sys_.D.copy()
+
+
+def _foh(sys_: StateSpace, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
+    n = sys_.A.shape[0]
+    p = sys_.inputs
+    u = np.zeros((2, n + p + 1))
+    u[0, -1] = 1 / sample_time
+    F = np.block([[sys_.A, sys_.B, np.zeros((n, 1))],[u]])
+    J = expm(F * sample_time)
+    G = J[0: n, 0: n]
+    Gamma1 = J[0: n, n: n + p]
+    Gamma2 = J[0: n, n + p:]
+    H = Gamma1 + G @ Gamma2 - Gamma2
+    D = sys_.D + sys_.C @ Gamma2
+    return G, H, sys_.C, D
 
 
 def _tustin(sys_: StateSpace, sample_time: numbers.Real) -> Tuple[np.ndarray, ...]:
@@ -64,7 +81,7 @@ def _matched(sys_: TransferFunction, sample_time: numbers.Real) -> Tuple[np.ndar
 
 
 _methods = {'matched': _matched, 'Tustin': _tustin, 'tustin': _tustin,
-            'bilinear': _tustin, 'zoh': _zoh}
+            'bilinear': _tustin, 'zoh': _zoh, 'foh': _foh}
 
 
 @singledispatch
@@ -77,6 +94,12 @@ def c2d(sys_, sample_time, method='zoh'):
     :param sample_time: sample time
     :type sample_time: numbers.Real
     :param method: method used in transformation(default: zoh)
+    method list:
+        matched
+        tustin
+        bilinear
+        zoh
+        foh
     :type method: str
     :return: a discrete system
     :rtype: TransferFunction | StateSpace
