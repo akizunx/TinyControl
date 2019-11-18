@@ -1,11 +1,12 @@
 import numbers
 from collections import Iterable
-import warnings
+from copy import deepcopy
 
-from .lti import LinearTimeInvariant, _pickup_dt
-from .exception import *
 import numpy as np
 import sympy as sym
+
+from .exception import *
+from .lti import LinearTimeInvariant, _pickup_dt
 
 # TODO: trans function of MIMO
 
@@ -25,32 +26,65 @@ class TransferFunction(LinearTimeInvariant):
     """
 
     def __init__(self, num, den, *, dt=None):
-        # turn to poly1d for discarding redundant 0 in numerator and denominator
-        num = np.poly1d(num).coeffs
-        den = np.poly1d(den).coeffs
+        *shape1, depth1 = _get_tf_structure(num)
+        *shape2, depth2 = _get_tf_structure(den)
 
-        super().__init__(1, 1, dt)
-        self.num = num
-        self.den = den
+        numerator = deepcopy(num)
+        denominator = deepcopy(den)
+        for j in range(shape1[1]):
+            for i in range(shape2[0]):
+                # discarding leading zeros in numerator and denominator
+                if depth1 == 1:
+                    n = np.trim_zeros(num, 'f')
+                    d = np.trim_zeros(den, 'f')
+                    numerator = [[np.array(n)]]
+                    denominator = [[np.array(d)]]
+                else:
+                    n = np.trim_zeros(num[i][j], 'f')
+                    d = np.trim_zeros(den[i][j], 'f')
+                    numerator[i][j] = np.array(n)
+                    denominator[i][j] = np.array(d)
+
+        super().__init__(shape1[1], shape1[0], dt)
+        self._num = numerator
+        self._den = denominator
+
+    def __getitem__(self, item):
+        if isinstance(item, tuple):
+            if isinstance(item[0], numbers.Integral):
+                i, j = item
+                return TransferFunction(self._num[i][j], self._den[i][j], dt=self.dt)
+            elif isinstance(item[0], slice):
+                i, j = item
+                num = [x[j] for x in self._num[i]]
+                den = [x[j] for x in self._den[i]]
+                return TransferFunction(num, den, dt=self.dt)
+        else:
+            raise NotImplementedError
 
     def __str__(self):
-        gs, *_ = _tf_to_symbol(self.num, self.den)
-        gs = str(gs).replace('(', '').replace(')', '')
+        if self.is_siso:
+            gs, *_ = _tf_to_symbol(self.num, self.den)
+            gs = str(gs).replace('(', '').replace(')', '')
 
-        if self.is_gain:
-            return f'static gain: {gs}'
-        else:
-            cs, rs = gs.split('/')
-            len1 = len(cs)
-            len2 = len(rs)
-            len_diff = len2 - len1
-            indent = ' ' * (len_diff // 2) if not len_diff % 2 else ' ' * (len_diff // 2 + 1)
-            r = f'{indent}{cs}\n{"-" * len2}\n{rs}'
-
-            if self.is_ctime:
-                return r
+            if self.is_gain:
+                return f'static gain: {gs}'
             else:
-                return r.replace('s', 'z') + f'\nsample time:{self.dt}s'
+                cs, rs = gs.split('/')
+                len1 = len(cs)
+                len2 = len(rs)
+                len_diff = len2 - len1
+                indent = ' ' * (len_diff // 2) if not len_diff % 2 else ' ' * (
+                            len_diff // 2 + 1)
+                r = f'{indent}{cs}\n{"-" * len2}\n{rs}'
+
+                if self.is_ctime:
+                    return r
+                else:
+                    return r.replace('s', 'z') + f'\nsample time:{self.dt}s'
+        else:
+            # TODO: design mimo display style
+            return str((str(self._num) + '\n' + str(self._den)))
 
     __repr__ = __str__
 
@@ -96,9 +130,23 @@ class TransferFunction(LinearTimeInvariant):
     def is_gain(self):
         return np.poly1d(self.num).order == np.poly1d(self.den).order == 0
 
+    @property
+    def num(self):
+        if self.is_siso:
+            return self._num[0][0]
+        else:
+            return self._num
+
+    @property
+    def den(self):
+        if self.is_siso:
+            return self._den[0][0]
+        else:
+            return self._den
+
     def evalfr(self, frequency):
         with np.errstate(divide='ignore'):
-            return  np.polyval(self.num, frequency) / np.polyval(self.den, frequency)
+            return np.polyval(self.num, frequency) / np.polyval(self.den, frequency)
 
     def pole(self):
         """
@@ -123,13 +171,20 @@ class TransferFunction(LinearTimeInvariant):
 
     def _parallel(self, other):
         dt = _pickup_dt(self, other)
-        if np.array_equal(self.den, other.den):
-            den = self.den
-            num = np.polyadd(self.num, other.num)
-        else:
-            den = np.convolve(self.den, other.den)
-            num = np.polyadd(np.convolve(self.num, other.den),
-                             np.convolve(other.num, self.den))
+        num = [[(j, i) for i in range(self.inputs)] for j in range(self.outputs)]
+        den = [[(j, i) for i in range(self.inputs)] for j in range(self.outputs)]
+        for i in range(self.inputs):
+            for j in range(self.outputs):
+                left_num, left_den = self._num[j][i], self._den[j][i]
+                right_num, right_den = other._num[j][i], other._den[j][i]
+                if np.array_equal(left_den, right_den):
+                    d = left_den
+                    n = np.polyadd(left_num, right_num)
+                else:
+                    d = np.convolve(left_den, right_den)
+                    n = np.polyadd(np.convolve(left_num, right_den),
+                                     np.convolve(right_num, left_den))
+                num[j][i], den[j][i] = n, d
 
         return TransferFunction(num, den, dt=dt)
 
@@ -166,6 +221,24 @@ class TransferFunction(LinearTimeInvariant):
                          np.convolve(self.den, other.den) * (-sign))
 
         return TransferFunction(num, den, dt=dt)
+
+
+def _get_tf_structure(lst):
+    if len(lst) == 0:
+        raise ValueError
+
+    i = 0
+    j = 0
+    depth = 3
+    for i, x in enumerate(lst):
+        if not isinstance(x, Iterable):
+            depth = 1
+            break
+        for j, y in enumerate(x):
+            if not isinstance(y, Iterable):
+                raise ValueError
+
+    return i + 1, j + 1, depth
 
 
 def _tf_to_symbol(num, den):

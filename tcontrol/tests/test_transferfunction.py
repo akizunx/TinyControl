@@ -82,3 +82,23 @@ class TestTransferFunction(TestCase):
         self.assertRaises(WrongNumberOfArguments, tf, **{'num': [1]})
         self.assertRaises(WrongNumberOfArguments, tf, **{'den': [1]})
         self.assertRaises(WrongNumberOfArguments, tf, **{'num': [1], 'dt': 0.1})
+
+
+class TestMIMOTransferFunction(TestCase):
+    def setUp(self) -> None:
+        self.a = [[[0, 1], [1, 1]], [[0, 0, 1, 2], [1, 0, -1]], [[2], [2, 0]]]
+        self.b = [[np.array([1, 1]), [0, 1, 1, 0]], [[1, 2, 1], [1, 1, 0, -1]],
+                  [[1], [1, 0, 2]]]
+        self.c = [[[1], [1]], [[1, 1], [1, 0]], [[2], [1, 0, 1]]]
+        self.d = [[[1, 2, 1], [1, 1]], [[1, 0, 1], [1, 0, 1]], [[1], [1, 0, 2]]]
+        self.mimo1 = TransferFunction(self.a, self.b)
+        self.mimo2 = TransferFunction(self.c, self.d)
+
+    def test___getitem__(self):
+        assert_tf_equal(self.mimo1[0, 0], tf([1], [1, 1]))
+
+    def test___add__(self):
+        r = self.mimo1 + self.mimo2
+        assert_tf_equal(r[0, 0], tf([1, 3, 2], [1, 3, 3, 1]))
+        assert_tf_equal(r[0, 1], tf([2, 3, 1], [1, 2, 1, 0]))
+        assert_tf_equal(r[2, 0], tf([4], [1]))
