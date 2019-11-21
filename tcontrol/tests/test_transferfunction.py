@@ -92,7 +92,7 @@ class TestMIMOTransferFunction(TestCase):
         self.c = [[[1], [1]], [[1, 1], [1, 0]], [[2], [1, 0, 1]]]
         self.d = [[[1, 2, 1], [1, 1]], [[1, 0, 1], [1, 0, 1]], [[1], [1, 0, 2]]]
         self.e = [[[1]], [[1, 2, 1]]]
-        self.f = [[[1, 0]],[[1, 0, 2, 1]]]
+        self.f = [[[1, 0]], [[1, 0, 2, 1]]]
         self.mimo1 = TransferFunction(self.a, self.b)
         self.mimo2 = TransferFunction(self.c, self.d)
         self.mimo3 = TransferFunction(self.e, self.f)
@@ -110,3 +110,8 @@ class TestMIMOTransferFunction(TestCase):
         r = self.mimo1 * self.mimo3
         assert_tf_equal(r[0, 0], tf([2, 5, 8, 7, 2, 0], [1, 2, 3, 5, 4, 1, 0, 0]))
         self.mimo3.cascade(self.mimo1)
+
+    def test_pole(self):
+        pole = np.array(
+            [0, 0.2266988258 - 1.467711509j, 0.2266988258 + 1.467711509j, -0.4533976515])
+        assert_array_almost_equal(np.poly(self.mimo3.pole()), np.poly(pole))

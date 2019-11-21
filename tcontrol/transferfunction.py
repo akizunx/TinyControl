@@ -1,6 +1,7 @@
 import numbers
 from collections import Iterable
 from copy import deepcopy
+from itertools import combinations
 
 import numpy as np
 import sympy as sym
@@ -158,7 +159,16 @@ class TransferFunction(LinearTimeInvariant):
         :return: poles of the system
         :rtype: numpy.ndarray
         """
-        return np.roots(self.den)
+        if self.is_siso:
+            return np.roots(self.den)
+        else:
+            TFM = _tfm2sympy(self.num, self.den)
+            lcm = _get_tfm_lcm(TFM)
+            _, ploys = sym.factor_list(lcm)
+            poles = []
+            for p, _ in ploys:
+                poles.extend(np.roots(p.all_coeffs()))
+            return np.array(poles)
 
     def zero(self):
         """
@@ -167,7 +177,10 @@ class TransferFunction(LinearTimeInvariant):
         :return: zeros of the system
         :rtype: numpy.ndarray
         """
-        return np.roots(self.num)
+        if self.is_siso:
+            return np.roots(self.num)
+        else:
+            raise NotImplementedError
 
     def parallel(self, *systems):
         return super().parallel(*systems)
@@ -229,7 +242,7 @@ class TransferFunction(LinearTimeInvariant):
 
 def _get_tf_structure(lst):
     if len(lst) == 0:
-        raise ValueError
+        raise ValueError('Empty list!')
 
     i = 0
     j = 0
@@ -240,7 +253,7 @@ def _get_tf_structure(lst):
             break
         for j, y in enumerate(x):
             if not isinstance(y, Iterable):
-                raise ValueError
+                raise ValueError('Matrix of numbers is not valid')
 
     return i + 1, j + 1, depth
 
@@ -266,6 +279,41 @@ def _add_poly_frac(left_num, left_den, right_num, right_den):
         n = np.polyadd(np.convolve(left_num, right_den),
                        np.convolve(right_num, left_den))
     return n, d
+
+
+def _tfm2sympy(num, den):
+    tfm = _dummy_tfm(len(num[0]), len(num))
+    s = sym.symbols('s')
+    for j, (n, d) in enumerate(zip(num, den)):
+        for i, (a, b) in enumerate(zip(n, d)):
+            tfm[j][i] = sym.Poly.from_list(a, s) / sym.Poly.from_list(b, s)
+    return sym.Matrix(tfm)
+
+
+def _get_nth_minors(M, n):
+    q, p = M.shape
+    if n > min(q, p):
+        raise ValueError(f"Matrix M doesn\'t have {n}th minors")
+
+    minors = []
+    for j in combinations(range(q), n):
+        for i in combinations(range(p), n):
+            minor = sym.det(M[j, i]).together()
+            minors.append(minor)
+    return minors
+
+
+def _get_tfm_lcm(TFM):
+    lcms = []
+    for i in range(1, min(TFM.shape) + 1):
+        minors = _get_nth_minors(TFM, i)
+        dens = []
+        for minor in minors:
+            _, den = sym.fraction(minor)
+            dens.append(den)
+        lcms.append(sym.lcm_list(dens))
+    lcm = sym.Poly(sym.lcm_list(lcms))
+    return lcm
 
 
 def _tf_to_symbol(num, den):
