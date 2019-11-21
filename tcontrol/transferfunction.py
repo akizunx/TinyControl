@@ -75,7 +75,7 @@ class TransferFunction(LinearTimeInvariant):
                 len2 = len(rs)
                 len_diff = len2 - len1
                 indent = ' ' * (len_diff // 2) if not len_diff % 2 else ' ' * (
-                            len_diff // 2 + 1)
+                        len_diff // 2 + 1)
                 r = f'{indent}{cs}\n{"-" * len2}\n{rs}'
 
                 if self.is_ctime:
@@ -126,6 +126,9 @@ class TransferFunction(LinearTimeInvariant):
 
     __rmul__ = __mul__
 
+    def __matmul__(self, other):
+        return self.cascade(other)
+
     @property
     def is_gain(self):
         return np.poly1d(self.num).order == np.poly1d(self.den).order == 0
@@ -171,19 +174,13 @@ class TransferFunction(LinearTimeInvariant):
 
     def _parallel(self, other):
         dt = _pickup_dt(self, other)
-        num = [[(j, i) for i in range(self.inputs)] for j in range(self.outputs)]
-        den = [[(j, i) for i in range(self.inputs)] for j in range(self.outputs)]
+        num = _dummy_tfm(self.inputs, self.outputs)
+        den = _dummy_tfm(self.inputs, self.outputs)
         for i in range(self.inputs):
             for j in range(self.outputs):
                 left_num, left_den = self._num[j][i], self._den[j][i]
                 right_num, right_den = other._num[j][i], other._den[j][i]
-                if np.array_equal(left_den, right_den):
-                    d = left_den
-                    n = np.polyadd(left_num, right_num)
-                else:
-                    d = np.convolve(left_den, right_den)
-                    n = np.polyadd(np.convolve(left_num, right_den),
-                                     np.convolve(right_num, left_den))
+                n, d = _add_poly_frac(left_num, left_den, right_num, right_den)
                 num[j][i], den[j][i] = n, d
 
         return TransferFunction(num, den, dt=dt)
@@ -192,10 +189,17 @@ class TransferFunction(LinearTimeInvariant):
         return super().cascade(*systems)
 
     def _cascade(self, other):
-        num = np.convolve(self.num, other.num)
-        den = np.convolve(self.den, other.den)
-
         dt = _pickup_dt(self, other)
+        num = _dummy_tfm(self.inputs, other.outputs)
+        den = _dummy_tfm(self.inputs, other.outputs)
+
+        for j in range(self.inputs):
+            for i in range(other.outputs):
+                n = [x[j] for x in self._num]
+                d = [x[j] for x in self._den]
+                nn, dd = _poly_inner_prod(zip(other._num[i], other._den[i]), zip(n, d))
+                num[i][j] = nn
+                den[i][j] = dd
 
         return TransferFunction(num, den, dt=dt)
 
@@ -239,6 +243,29 @@ def _get_tf_structure(lst):
                 raise ValueError
 
     return i + 1, j + 1, depth
+
+
+def _dummy_tfm(inputs, outputs):
+    return [[(j, i) for i in range(inputs)] for j in range(outputs)]
+
+
+def _poly_inner_prod(a, b):
+    n = np.array([0])
+    d = np.array([1])
+    for (n1, d1), (n2, d2) in zip(a, b):
+        n, d = _add_poly_frac(n, d, np.convolve(n1, n2), np.convolve(d1, d2))
+    return n, d
+
+
+def _add_poly_frac(left_num, left_den, right_num, right_den):
+    if np.array_equal(left_den, right_den):
+        d = left_den
+        n = np.polyadd(left_num, right_num)
+    else:
+        d = np.convolve(left_den, right_den)
+        n = np.polyadd(np.convolve(left_num, right_den),
+                       np.convolve(right_num, left_den))
+    return n, d
 
 
 def _tf_to_symbol(num, den):
