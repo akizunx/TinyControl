@@ -149,8 +149,17 @@ class TransferFunction(LinearTimeInvariant):
             return self._den
 
     def evalfr(self, frequency):
+        val = np.zeros((self.outputs, self.inputs), dtype=np.complex)
         with np.errstate(divide='ignore'):
-            return np.polyval(self.num, frequency) / np.polyval(self.den, frequency)
+            for j in range(self.outputs):
+                for i in range(self.inputs):
+                    val[j, i] = np.polyval(self._num[j][i], frequency) / \
+                                np.polyval(self._den[j][i], frequency)
+
+            if self.is_siso:
+                return val[0, 0]
+            else:
+                return val
 
     def pole(self):
         """
@@ -162,6 +171,7 @@ class TransferFunction(LinearTimeInvariant):
         if self.is_siso:
             return np.roots(self.den)
         else:
+            # if inputs and outputs are large, this method takes too long to finish
             TFM = _tfm2sympy(self.num, self.den)
             lcm = _get_tfm_lcm(TFM)
             _, ploys = sym.factor_list(lcm)
@@ -398,11 +408,7 @@ def zpk(z, p, k):
         >>> print(system)
         5.2/(1.0*s**3 - 2.5*s**2 + 2.0*s - 0.5)
     """
-    num = np.array([k])
-    for zi in z:
-        num = np.convolve(num, np.array([1, -zi]))
-
-    den = np.array([1])
-    for pi in p:
-        den = np.convolve(den, np.array([1, -pi]))
+    num = np.poly(z)
+    num = np.polymul([k], num)
+    den = np.poly(p)
     return TransferFunction(num, den)

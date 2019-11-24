@@ -115,3 +115,6 @@ class TestMIMOTransferFunction(TestCase):
         pole = np.array(
             [0, 0.2266988258 - 1.467711509j, 0.2266988258 + 1.467711509j, -0.4533976515])
         assert_array_almost_equal(np.poly(self.mimo3.pole()), np.poly(pole))
+
+    def test_evalfr(self):
+        print(self.mimo3.evalfr(1 + 2j))
