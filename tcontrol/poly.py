@@ -1,4 +1,7 @@
+from copy import deepcopy
+
 import numpy as np
+import sympy as sym
 
 __all__ = ['conv', 'deconv', 'poly', 'roots']
 
@@ -28,3 +31,51 @@ def roots(p):
     :rtype: numpy.ndarray
     """
     return np.roots(p)
+
+
+def _swap_rows(M, i, j):
+    M[i, :], M[j, :] = deepcopy(M[j, :]), deepcopy(M[i, :])
+    return M
+
+
+def _swap_cols(M, i, j):
+    M[:, i], M[:, j] = deepcopy(M[:, j]), deepcopy(M[:, i])
+    return M
+
+
+def _simplify_symbol_expr(func):
+    def wrapper(*args, **kwargs):
+        r = func(*args, **kwargs)
+        if isinstance(r, sym.Matrix):
+            r.simplify()
+        return r
+
+    return wrapper
+
+
+@_simplify_symbol_expr
+def _mul_row(M, i, k):
+    M[i, :] = k * M[i, :]
+    return M
+
+
+@_simplify_symbol_expr
+def _mul_col(M, i, k):
+    M[:, i] = k * M[:, i]
+    return M
+
+
+@_simplify_symbol_expr
+def _add_row(M, i, j, k):
+    M[i, :] = M[i, :] + k * M[j, :]
+    return M
+
+
+@_simplify_symbol_expr
+def _add_col(M, i, j, k):
+    M[:, i] = M[:, i] + k * M[:, j]
+    return M
+
+
+def poly_smith_form(M):
+    pass
