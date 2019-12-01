@@ -12,6 +12,8 @@ class TestPoly(TestCase):
         s = sym.symbols('s')
         self.s = sym.symbols('s')
         self.tfm = sym.Matrix([[s, s ** 2 + 1], [1, s - 1]])
+        M = sym.Matrix([[s ** 2 + 9 * s + 8, 4, s + 3], [0, s + 3, s + 2]])
+        self.M = M.applyfunc(lambda p: sym.Poly.from_expr(p, s))
 
     def test_conv(self):
         ret = conv([1, -1], [1, 1])
@@ -61,3 +63,7 @@ class TestPoly(TestCase):
     def test__add_col(self):
         a = np.array([[1, 2], [2, 4]])
         assert_array_equal(_add_col(a, 0, 1, -0.5), np.array([[0, 2], [0, 4]]))
+
+    def test_poly_smith_form(self):
+        M = sym.Matrix([[1, 0, 0], [0, self.s + 1, 0]])
+        self.assertTrue(poly_smith_form(self.M) == M)
