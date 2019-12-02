@@ -76,13 +76,24 @@ def _add_col(M, i, j, k):
     return M
 
 
-def _elem2sympy_poly(M):
+def _convert2sympy_poly(M):
     m, n = M.shape
     s = sym.symbols('s')
     N = sym.zeros(*M.shape)
+    if isinstance(M, sym.Matrix):
+        f = sym.Poly.from_expr
+    elif isinstance(M, np.ndarray):
+        f = sym.Poly.from_list
+    else:
+        raise TypeError
+
     for i in range(m):
         for j in range(n):
-            N[i, j] = M[i, j].as_poly(s)
+            p = M[i, j]
+            if not isinstance(p, sym.Poly):
+                N[i, j] = f(p, s)
+            else:
+                N[i, j] = M[i, j]
     return N
 
 
@@ -102,9 +113,15 @@ def _min_degree_index(M: sym.Matrix, i=0):
 
 
 def poly_smith_form(M: sym.Matrix):
-    M = _elem2sympy_poly(M)
-    N = sym.zeros(*M.shape)
+    M = _convert2sympy_poly(M)
     diag = _poly_smith_form(M)
+    diag.sort(key=sym.Poly.degree)
+    for i, (x, y) in enumerate(zip(diag[0: len(diag) - 1], diag[1:])):
+        if y.rem(x) != 0:
+            gcd = sym.Poly.gcd(x, y)
+            diag[i + 1] = y * x.quo(gcd)
+
+    N = sym.zeros(*M.shape)
     for i, x in enumerate(diag):
         N[i, i] = x
     return N
@@ -126,15 +143,12 @@ def _poly_smith_form(M: sym.Matrix):
         qr_table = dict()
         for i in range(m):
             q, r = M[i, 0].div(p)
-            if r == 0:
-                continue
-            else:
+            if r != 0:
                 qr_table.update({(i, 0, q, r): r.degree()})
+
         for j in range(n):
             q, r = M[0, j].div(p)
-            if r == 0:
-                continue
-            else:
+            if r != 0:
                 qr_table.update({(0, j, q, r): r.degree()})
 
         if not qr_table:
@@ -147,11 +161,12 @@ def _poly_smith_form(M: sym.Matrix):
                 _add_row(M, j, i, -q)
 
     for i in range(1, m):
-        q, r = M[i, 0].div(p)
+        q, _ = M[i, 0].div(p)
         _add_row(M, i, 0, -q)
     for j in range(1, n):
-        q, r = M[0, j].div(p)
+        q, _ = M[0, j].div(p)
         _add_col(M, j, 0, -q)
+
     coeff = M[0, 0].all_coeffs()[0]
     p, _ = M[0, 0].div(coeff)
 
